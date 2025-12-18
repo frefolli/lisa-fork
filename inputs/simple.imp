@@ -1,0 +1,16 @@
+class Example {
+  main() {
+    def allneg = true;
+    if (allneg) {
+      this.fail();
+    } else {
+      this.succ();
+    }
+  }
+
+  fail() {
+  }
+
+  succ() {
+  }
+}

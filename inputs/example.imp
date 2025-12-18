@@ -1,0 +1,26 @@
+class Example {
+  main(p0_1, p0_2, p0_3, p0_4) {
+    def allneg = true;
+
+    def v0 = -1;
+    if (p0_1) {
+      v0 = 1;  
+    } else if (p0_2) {
+      v0 = 2;
+    } else if (p0_3) {
+      v0 = 3;
+    } else if (p0_4) {
+      v0 = 4;
+    }
+    if (v0 >= 0) {
+      allneg = false;
+    }
+
+    if (allneg) {
+      this.abort();
+    }
+  }
+
+  abort() {
+  }
+}

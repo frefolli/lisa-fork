@@ -1,0 +1,17 @@
+class Dominance {
+  main(a) {
+    def b = a;
+    while (a > 0) {
+      if (a > 0) {
+        if (a > 5) {
+          a = a + 5;
+        } else {
+          a = a - 7;
+        }
+      } else {
+        a = a - 3;
+      }
+    }
+    def c = (a + 10) * b;
+  }
+}
