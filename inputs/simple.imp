@@ -1,16 +1,11 @@
 class Example {
   main() {
     def allneg = true;
+    def X = 0;
     if (allneg) {
-      this.fail();
+      X = 1;
     } else {
-      this.succ();
+      X = 2;
     }
-  }
-
-  fail() {
-  }
-
-  succ() {
   }
 }

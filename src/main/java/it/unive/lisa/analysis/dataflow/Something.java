@@ -47,15 +47,68 @@ public class Something
    * @return the lattice element for keys not in the mapping
    */
   public GenericSetLattice<ProgramPoint> stateOfUnknown(ProgramPoint key) {
+    return lattice.bottom();
+  }
+
+  public boolean shouldConsiderProgramPoint(ProgramPoint pp) {
+    if (!(pp instanceof Statement)) {
+      return false;
+    }
+    if (pp.getCFG().getEntrypoints().contains(pp)
+    || !(pp.getCFG().getIngoingEdges((Statement)pp).isEmpty()))
+      return true;
+    return false;
+  }
+
+  public GenericSetLattice<ProgramPoint> initializeState(ProgramPoint pp) {
+    assert shouldConsiderProgramPoint(pp);
     Set<ProgramPoint> result = new HashSet<>();
-    if (key.getCFG().getEntrypoints().contains(key)) {
-      result.add(key);
+    if (pp.getCFG().getEntrypoints().contains(pp)) {
+      result.add(pp);
     } else {
-      for (Statement stmt : key.getCFG().getNodes()) {
-        result.add(stmt);
+      for (Statement stmt : pp.getCFG().getNodes()) {
+        if (shouldConsiderProgramPoint(stmt)) {
+          result.add(stmt);
+        }
       }
     }
     return new GenericSetLattice<>(result);
+  }
+
+  public Something dominanceAnalysis(ProgramPoint pp) throws SemanticException {
+    Map<ProgramPoint, GenericSetLattice<ProgramPoint>> newFunction = mkNewFunction(function, false);
+    if (shouldConsiderProgramPoint(pp)) {
+      if (!newFunction.containsKey(pp)) {
+        newFunction.put(pp, initializeState(pp));
+      }
+      GenericSetLattice<ProgramPoint> state = null;
+      System.out.println(pp + "{");
+      for (Edge edge : pp.getCFG().getIngoingEdges((Statement)pp)) {
+        ProgramPoint source = edge.getSource();
+        if (shouldConsiderProgramPoint(source)) {
+          GenericSetLattice<ProgramPoint> prev = null;
+          if (!newFunction.containsKey(source)) {
+            newFunction.put(source, initializeState(source));
+          }
+          prev = newFunction.get(source);
+          System.out.println(" - " + prev);
+          if (state == null) {
+            state = prev;
+          } else {
+            state = state.glb(prev);
+          }
+        }
+      }
+      System.out.print("}");
+      if (state == null) {
+        state = new GenericSetLattice<ProgramPoint>(pp);
+      } else {
+        state = state.lub(new GenericSetLattice<ProgramPoint>(pp));
+      }
+      System.out.println("} := " + state);
+      newFunction.put(pp, state);
+    }
+    return mk(lattice, newFunction);
   }
 
   /**
@@ -302,8 +355,7 @@ public class Something
 			                    SymbolicExpression expression,
 			                    ProgramPoint pp,
 			                    SemanticOracle oracle) throws SemanticException {
-    Map<ProgramPoint, GenericSetLattice<ProgramPoint>> newFunction = mkNewFunction(function, false);
-    return mk(lattice, newFunction);
+    return dominanceAnalysis(pp);
   }
 
 	/**
@@ -323,30 +375,7 @@ public class Something
 	public Something smallStepSemantics(SymbolicExpression expression,
 			                                ProgramPoint pp,
 			                                SemanticOracle oracle) throws SemanticException {
-    Map<ProgramPoint, GenericSetLattice<ProgramPoint>> newFunction = mkNewFunction(function, false);
-    if (!newFunction.containsKey(pp)) {
-      newFunction.put(pp, stateOfUnknown(pp));
-    }
-    GenericSetLattice<ProgramPoint> state = null;
-    for (Edge edge : pp.getCFG().getIngoingEdges((Statement)pp)) {
-      GenericSetLattice<ProgramPoint> prev = null;
-      if (!newFunction.containsKey(edge.getSource())) {
-        newFunction.put(edge.getSource(), stateOfUnknown(edge.getSource()));
-      }
-      prev = newFunction.get(edge.getSource());
-      if (state == null) {
-        state = prev;
-      } else {
-        state = state.glb(prev);
-      }
-    }
-    if (state == null) {
-      state = new GenericSetLattice<ProgramPoint>(pp);
-    } else {
-      state = state.lub(new GenericSetLattice<ProgramPoint>(pp));
-    }
-    newFunction.put(pp, state);
-    return mk(lattice, newFunction);
+    return dominanceAnalysis(pp);
   }
 
 	/**
@@ -373,6 +402,7 @@ public class Something
 			                    SemanticOracle oracle) throws SemanticException {
     Map<ProgramPoint, GenericSetLattice<ProgramPoint>> newFunction = mkNewFunction(function, false);
     return mk(lattice, newFunction);
+    // return dominanceAnalysis(dest);
   }
 
 	/**
