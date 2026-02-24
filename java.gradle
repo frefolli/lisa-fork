@@ -25,6 +25,8 @@ compileJava {
     options.debugOptions.debugLevel = "source,lines,vars"
   	sourceCompatibility = '11'
   	targetCompatibility = '11'
+
+    options.compilerArgs += ["-Xlint:unchecked"]
 }
 
 compileTestJava {

@@ -1,8 +1,7 @@
 class Example {
-  main() {
-    def allneg = true;
+  main(allneg) {
     def X = 0;
-    if (allneg) {
+    if (allneg >= 1) {
       X = 1;
     } else {
       X = 2;

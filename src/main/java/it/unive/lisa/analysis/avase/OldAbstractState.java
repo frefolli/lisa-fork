@@ -1,4 +1,4 @@
-package it.unive.lisa.analysis.dataflow;
+package it.unive.lisa.analysis.avase;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -6,7 +6,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import it.unive.lisa.analysis.nonrelational.value.TypeEnvironment;
+import it.unive.lisa.analysis.types.InferredTypes;
 import it.unive.lisa.analysis.AbstractState;
+import it.unive.lisa.analysis.BaseLattice;
 import it.unive.lisa.analysis.ScopeToken;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.SemanticOracle;
@@ -22,132 +25,23 @@ import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
+import it.unive.lisa.util.representation.StringRepresentation;
+import it.unive.lisa.util.representation.MapRepresentation;
+import it.unive.lisa.util.representation.StructuredRepresentation;
 
-public class Something
-extends FunctionalLattice<Something, ProgramPoint, PPInverseSetLattice>
-implements AbstractState<Something> {
-	private Something(PPInverseSetLattice lattice,
-			Map<ProgramPoint, PPInverseSetLattice> function) {
-		super(lattice, function);
+public class OldAbstractState
+implements AbstractState<OldAbstractState>, BaseLattice<OldAbstractState> {
+  Dominance dominance;
+  TypeEnvironment<InferredTypes> typeEnvironment;
+	
+  private OldAbstractState(Dominance dominance, TypeEnvironment<InferredTypes> typeEnvironment) {
+    this.dominance = dominance;
+    this.typeEnvironment = typeEnvironment;
 	}
 
-	public Something() {
-		super(new PPInverseSetLattice(), new HashMap<ProgramPoint, PPInverseSetLattice>());
-	}
-
-	/* FUNCTIONAL LATTICE */
-
-	/**
-	 * Yields the value that should be returned by {@link #getState(Object)}
-	 * whenever the given key is not present in this map.
-	 * 
-	 * @param key the key that is missing
-	 * 
-	 * @return the lattice element for keys not in the mapping
-	 */
-	public PPInverseSetLattice stateOfUnknown(ProgramPoint key) {
-		return lattice.bottom();
-	}
-
-	public boolean shouldConsiderProgramPoint(ProgramPoint pp) {
-		if (!(pp instanceof Statement)) {
-			return false;
-		}
-		if (pp.getCFG().getEntrypoints().contains(pp)
-				|| !(pp.getCFG().getIngoingEdges((Statement)pp).isEmpty()))
-			return true;
-		return false;
-	}
-
-	public PPInverseSetLattice initializeState(ProgramPoint pp) {
-		assert shouldConsiderProgramPoint(pp);
-		Set<ProgramPoint> result = new HashSet<>();
-		if (pp.getCFG().getEntrypoints().contains(pp)) {
-			result.add(pp);
-		} else {
-			for (Statement stmt : pp.getCFG().getNodes()) {
-				if (shouldConsiderProgramPoint(stmt)) {
-					result.add(stmt);
-				}
-			}
-		}
-		return new PPInverseSetLattice(result);
-	}
-
-	public Something dominanceAnalysis(ProgramPoint pp) throws SemanticException {
-		Map<ProgramPoint, PPInverseSetLattice> newFunction = mkNewFunction(function, false);
-		if (shouldConsiderProgramPoint(pp)) {
-			if (!newFunction.containsKey(pp)) {
-				newFunction.put(pp, initializeState(pp));
-			}
-			
-			PPInverseSetLattice state = new PPInverseSetLattice().bottom();
-			for (Edge edge : pp.getCFG().getIngoingEdges((Statement)pp)) {
-				ProgramPoint source = edge.getSource();
-				if (shouldConsiderProgramPoint(source)) {
-					PPInverseSetLattice prev = null;
-					if (!newFunction.containsKey(source)) {
-						newFunction.put(source, initializeState(source));
-					}
-					prev = newFunction.get(source);
-					state = state.lub(prev);
-				}
-			}
-			if (state.isBottom())
-				state = new PPInverseSetLattice(pp);
-			else
-				state = state.glb(new PPInverseSetLattice(pp));
-			newFunction.put(pp, state);
-		}
-		return mk(lattice, newFunction);
-	}
-
-	/**
-	 * Builds a instance of this class from the given lattice instance and the
-	 * given mapping.
-	 * 
-	 * @param lattice  an instance of lattice to be used during semantic
-	 *                     operations to retrieve top and bottom values
-	 * @param function the function representing the mapping contained in the
-	 *                     new environment; can be {@code null}
-	 * 
-	 * @return a new instance of this class
-	 */
-	public Something mk(PPInverseSetLattice lattice,
-			Map<ProgramPoint, PPInverseSetLattice> function) {
-		return new Something(lattice, function);
-	}
-
-	/**
-	 * Yields the top element of this lattice. The returned element should be
-	 * unique across different calls to this method, since {@link #isTop()} uses
-	 * reference equality by default. If the value returned by this method is
-	 * not a singleton, override {@link #isTop()} accordingly to provide a
-	 * coherent test.
-	 *
-	 * {@link FunctionalLattice} already reimplements {@link #isTop()} to
-	 * have a non-unique returned {@link #top()} element. 
-	 * It checks that lattice.top() and function=null.
-	 * @return the top element
-	 */
-	public Something top() {
-		return new Something(lattice.top(), null);
-	}
-
-	/**
-	 * Yields the bottom element of this lattice. The returned element should be
-	 * unique across different calls to this method, since {@link #isBottom()}
-	 * uses reference equality by default. If the value returned by this method
-	 * is not a singleton, override {@link #isBottom()} accordingly to provide a
-	 * coherent test.
-	 * 
-	 * {@link FunctionalLattice} already reimplements {@link #isBottom()} to
-	 * have a non-unique returned {@link #bottom()} element.
-	 * It checks that lattice.bottom() and function=null.
-	 * @return the bottom element
-	 */
-	public Something bottom() {
-		return new Something(lattice.bottom(), null);
+	public OldAbstractState() {
+		this.dominance = new Dominance();
+    this.typeEnvironment = new TypeEnvironment<>(new InferredTypes());
 	}
 
 	/* ABSTRACT STATE */
@@ -158,8 +52,8 @@ implements AbstractState<Something> {
 	 * 
 	 * @return the copy with top memory
 	 */
-	public Something withTopMemory() {
-		return mk(lattice, function);
+	public OldAbstractState withTopMemory() {
+		return mk(dominance, typeEnvironment);
 	}
 
 	/**
@@ -169,8 +63,8 @@ implements AbstractState<Something> {
 	 * 
 	 * @return the copy with top values
 	 */
-	public Something withTopValues() {
-		return mk(lattice, function);
+	public OldAbstractState withTopValues() {
+		return mk(dominance, typeEnvironment);
 	}
 
 	/**
@@ -180,8 +74,8 @@ implements AbstractState<Something> {
 	 * 
 	 * @return the copy with top types
 	 */
-	public Something withTopTypes() {
-		return mk(lattice, function);
+	public OldAbstractState withTopTypes() {
+		return mk(dominance, typeEnvironment);
 	}
 
 	/* MEMORY-ORACLE */
@@ -269,7 +163,7 @@ implements AbstractState<Something> {
 	public Set<Type> getRuntimeTypesOf(SymbolicExpression e,
 			ProgramPoint pp,
 			SemanticOracle oracle) throws SemanticException {
-		return Set.of();
+		return typeEnvironment.getRuntimeTypesOf(e, pp, oracle);
 	}
 
 	/**
@@ -305,8 +199,8 @@ implements AbstractState<Something> {
 	 * 
 	 * @throws SemanticException if an error occurs during the computation
 	 */
-	public Something pushScope(ScopeToken token) throws SemanticException {
-		return mk(lattice, function);
+	public OldAbstractState pushScope(ScopeToken token) throws SemanticException {
+		return mk(dominance, typeEnvironment);
 	}
 
 	/**
@@ -323,8 +217,8 @@ implements AbstractState<Something> {
 	 * 
 	 * @throws SemanticException if an error occurs during the computation
 	 */
-	public Something popScope(ScopeToken token) throws SemanticException {
-		return mk(lattice, function);
+	public OldAbstractState popScope(ScopeToken token) throws SemanticException {
+		return mk(dominance, typeEnvironment);
 	}
 
 	/* SEMANTIC-DOMAIN */
@@ -342,11 +236,11 @@ implements AbstractState<Something> {
 	 * 
 	 * @throws SemanticException if an error occurs during the computation
 	 */
-	public Something assign(Identifier id,
+	public OldAbstractState assign(Identifier id,
 			SymbolicExpression expression,
 			ProgramPoint pp,
 			SemanticOracle oracle) throws SemanticException {
-		return dominanceAnalysis(pp);
+		return mk(dominance.assignStep(pp, id, expression), typeEnvironment);
 	}
 
 	/**
@@ -363,10 +257,10 @@ implements AbstractState<Something> {
 	 * 
 	 * @throws SemanticException if an error occurs during the computation
 	 */
-	public Something smallStepSemantics(SymbolicExpression expression,
+	public OldAbstractState smallStepSemantics(SymbolicExpression expression,
 			ProgramPoint pp,
 			SemanticOracle oracle) throws SemanticException {
-		return dominanceAnalysis(pp);
+		return mk(dominance.normalStep(pp), typeEnvironment);
 	}
 
 	/**
@@ -387,11 +281,11 @@ implements AbstractState<Something> {
 	 * 
 	 * @throws SemanticException if an error occurs during the computation
 	 */
-	public Something assume(SymbolicExpression expression,
+	public OldAbstractState assume(SymbolicExpression expression,
 			ProgramPoint src,
 			ProgramPoint dest,
 			SemanticOracle oracle) throws SemanticException {
-		return this;
+		return mk(dominance, typeEnvironment);
 	}
 
 	/**
@@ -417,8 +311,8 @@ implements AbstractState<Something> {
 	 * 
 	 * @throws SemanticException if an error occurs during the computation
 	 */
-	public Something forgetIdentifier(Identifier id) throws SemanticException {
-		return mk(lattice, function);
+	public OldAbstractState forgetIdentifier(Identifier id) throws SemanticException {
+		return mk(dominance, typeEnvironment);
 	}
 
 	/**
@@ -432,7 +326,72 @@ implements AbstractState<Something> {
 	 * 
 	 * @throws SemanticException if an error occurs during the computation
 	 */
-	public Something forgetIdentifiersIf(Predicate<Identifier> test) throws SemanticException {
-		return mk(lattice, function);
+	public OldAbstractState forgetIdentifiersIf(Predicate<Identifier> test) throws SemanticException {
+		return mk(dominance, typeEnvironment);
+	}
+  
+  /* LATTICE */
+	/**
+	 * Builds a instance of this class from the given dominance instance
+	 * 
+	 * @param dominance an instance of the dominance
+	 * 
+	 * @return a new instance of this class
+	 */
+	public OldAbstractState mk(Dominance dominance, TypeEnvironment<InferredTypes> typeEnvironment) {
+		return new OldAbstractState(dominance, typeEnvironment);
+	}
+
+	/**
+	 * Yields the top element of this lattice. The returned element should be
+	 * unique across different calls to this method, since {@link #isTop()} uses
+	 * reference equality by default. If the value returned by this method is
+	 * not a singleton, override {@link #isTop()} accordingly to provide a
+	 * coherent test.
+	 *
+	 * {@link FunctionalLattice} already reimplements {@link #isTop()} to
+	 * have a non-unique returned {@link #top()} element. 
+	 * It checks that lattice.top() and function=null.
+	 * @return the top element
+	 */
+	public OldAbstractState top() {
+		return new OldAbstractState(dominance.top(), typeEnvironment);
+	}
+
+	/**
+	 * Yields the bottom element of this lattice. The returned element should be
+	 * unique across different calls to this method, since {@link #isBottom()}
+	 * uses reference equality by default. If the value returned by this method
+	 * is not a singleton, override {@link #isBottom()} accordingly to provide a
+	 * coherent test.
+	 * 
+	 * {@link FunctionalLattice} already reimplements {@link #isBottom()} to
+	 * have a non-unique returned {@link #bottom()} element.
+	 * It checks that lattice.bottom() and function=null.
+	 * @return the bottom element
+	 */
+	public OldAbstractState bottom() {
+		return new OldAbstractState(dominance.bottom(), typeEnvironment);
+	}
+
+  /* Structured Object */
+	public StructuredRepresentation representation() {
+    HashMap<StructuredRepresentation, StructuredRepresentation> fields = new HashMap<>();
+    fields.put(new StringRepresentation("Poke"), typeEnvironment.representation());
+    fields.put(new StringRepresentation("Kemon"), dominance.representation());
+		return new MapRepresentation(fields);
+	}
+
+  /* Base Lattice */
+	public boolean lessOrEqualAux(
+			OldAbstractState other)
+			throws SemanticException {
+		return dominance.lessOrEqualAux(other.dominance);
+	}
+
+	public OldAbstractState lubAux(
+			OldAbstractState other)
+			throws SemanticException {
+		return mk(dominance.lub(other.dominance), typeEnvironment);
 	}
 }

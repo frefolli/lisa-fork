@@ -5,9 +5,9 @@ import java.util.Set;
 
 import it.unive.lisa.analysis.lattices.InverseSetLattice;
 import it.unive.lisa.program.cfg.ProgramPoint;
+import it.unive.lisa.analysis.SemanticException;
 
 public class PPInverseSetLattice extends InverseSetLattice<PPInverseSetLattice, ProgramPoint> {
-
 	public PPInverseSetLattice(Set<ProgramPoint> elements, boolean isTop) {
 		super(elements, isTop);
 	}
@@ -18,7 +18,6 @@ public class PPInverseSetLattice extends InverseSetLattice<PPInverseSetLattice, 
 	public PPInverseSetLattice() {
 		this(Collections.emptySet(), false);
 	}
-	
 
 	private PPInverseSetLattice(
 			boolean isTop) {
@@ -58,6 +57,4 @@ public class PPInverseSetLattice extends InverseSetLattice<PPInverseSetLattice, 
 	public PPInverseSetLattice bottom() {
 		return new PPInverseSetLattice();
 	}
-
-
 }
