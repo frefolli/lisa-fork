@@ -447,6 +447,7 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 	public AdvancedAbstractState<H, V, T> lubAux(
 			AdvancedAbstractState<H, V, T> other)
 			throws SemanticException {
+    System.out.println("(" + this + ") LUB (" + other + ")");
 		return new AdvancedAbstractState<>(
 				heapState.lub(other.heapState),
 				valueState.lub(other.valueState),
@@ -459,6 +460,7 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 	public AdvancedAbstractState<H, V, T> glbAux(
 			AdvancedAbstractState<H, V, T> other)
 			throws SemanticException {
+    System.out.println("(" + this + ") GLB (" + other + ")");
 		return new AdvancedAbstractState<>(
 				heapState.glb(other.heapState),
 				valueState.glb(other.valueState),

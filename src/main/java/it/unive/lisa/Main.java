@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import it.unive.lisa.analysis.avase.Dominance;
 import it.unive.lisa.analysis.avase.ReachingDefinitions;
 import it.unive.lisa.analysis.avase.AdvancedAbstractState;
-import it.unive.lisa.analysis.avase.OldAbstractState;
 import it.unive.lisa.conf.LiSAConfiguration;
 import it.unive.lisa.conf.LiSAConfiguration.GraphType;
 import it.unive.lisa.imp.IMPFrontend;

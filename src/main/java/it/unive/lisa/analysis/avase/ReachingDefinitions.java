@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.Collections;
 import java.util.function.Predicate;
 
 import it.unive.lisa.analysis.AbstractState;
@@ -22,18 +23,58 @@ import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
+import it.unive.lisa.analysis.lattices.SetLattice;
 
-public class ReachingDefinitions
-  extends FunctionalLattice<ReachingDefinitions, ProgramPoint, DefinitionSetLattice>
+public class ReachingDefinitions extends SetLattice<ReachingDefinitions, Definition>
   implements Speculator {
-
-	private ReachingDefinitions(DefinitionSetLattice lattice,
-			Map<ProgramPoint, DefinitionSetLattice> function) {
-		super(lattice, function);
+	public ReachingDefinitions(Set<Definition> elements, boolean isTop) {
+		super(elements, isTop);
 	}
 
+	/**
+	 * Builds the empty set lattice element.
+	 */
 	public ReachingDefinitions() {
-		super(new DefinitionSetLattice(), new HashMap<ProgramPoint, DefinitionSetLattice>());
+		this(Collections.emptySet(), false);
+	}
+
+	private ReachingDefinitions(
+			boolean isTop) {
+		this(Collections.emptySet(), isTop);
+	}
+
+	/**
+	 * Builds a singleton set lattice element.
+	 * 
+	 * @param exp the expression
+	 */
+	public ReachingDefinitions(
+			Definition exp) {
+		this(Collections.singleton(exp), false);
+	}
+
+	/**
+	 * Builds a set lattice element.
+	 * 
+	 * @param set the set of expression
+	 */
+	public ReachingDefinitions(
+			Set<Definition> set) {
+		this(Collections.unmodifiableSet(set), false);
+	}
+	@Override
+	public ReachingDefinitions mk(Set<Definition> set) {
+		return new ReachingDefinitions(set);
+	}
+	
+	@Override
+	public ReachingDefinitions top() {
+		return new ReachingDefinitions(true);
+	}
+
+	@Override
+	public ReachingDefinitions bottom() {
+		return new ReachingDefinitions();
 	}
 
 	public boolean shouldConsiderProgramPoint(ProgramPoint pp) {
@@ -46,25 +87,27 @@ public class ReachingDefinitions
 		return false;
 	}
 
-	public DefinitionSetLattice initializeState(ProgramPoint pp) {
+	public ReachingDefinitions initializeState(ProgramPoint pp) {
 		assert shouldConsiderProgramPoint(pp);
-		return new DefinitionSetLattice();
+		return new ReachingDefinitions();
 	}
 
-	public DefinitionSetLattice getPrecedentState(ProgramPoint pp) {
-    if (function == null || !function.containsKey(pp)) {
+	public ReachingDefinitions getPrecedentState(ProgramPoint pp) {
+    Map<ProgramPoint, ReachingDefinitions> function = DataflowStateMap.getReachingDefinitionsMap();
+    assert(function != null);
+    if (!function.containsKey(pp)) {
       return initializeState(pp);
     } else {
       return function.get(pp);
     }
   }
 
-	public DefinitionSetLattice joinPrecedentStates(ProgramPoint pp) throws SemanticException {
-    DefinitionSetLattice state = lattice.bottom();
+	public ReachingDefinitions joinPrecedentStates(ProgramPoint pp) throws SemanticException {
+    ReachingDefinitions state = this.bottom();
     for (Edge edge : pp.getCFG().getIngoingEdges((Statement)pp)) {
       ProgramPoint source = edge.getSource();
       if (shouldConsiderProgramPoint(source)) {
-        DefinitionSetLattice prev = getPrecedentState(source);
+        ReachingDefinitions prev = getPrecedentState(source);
         if (state.isBottom()) {
           state = prev;
         } else {
@@ -79,46 +122,43 @@ public class ReachingDefinitions
 
   @Override
 	public ReachingDefinitions normalStep(ProgramPoint pp) throws SemanticException {
-    System.out.println("NORMAL: " + pp);
-		Map<ProgramPoint, DefinitionSetLattice> newFunction = mkNewFunction(function, false);
 		if (shouldConsiderProgramPoint(pp)) {
-      DefinitionSetLattice state = joinPrecedentStates(pp);
-			newFunction.put(pp, state);
+      ReachingDefinitions state = joinPrecedentStates(pp);
+      Map<ProgramPoint, ReachingDefinitions> function = DataflowStateMap.getReachingDefinitionsMap();
+			function.put(pp, state);
 		}
-		return mk(lattice, newFunction);
+		return mk(elements);
   }
 
   @Override
 	public ReachingDefinitions assignStep(ProgramPoint pp, Identifier id, SymbolicExpression expr) throws SemanticException {
-    System.out.println("ASSIGN: " + pp + " -> " + id + " = " + expr);
-		Map<ProgramPoint, DefinitionSetLattice> newFunction = mkNewFunction(function, false);
 		if (shouldConsiderProgramPoint(pp)) {
-      DefinitionSetLattice state = joinPrecedentStates(pp);
+      ReachingDefinitions state = joinPrecedentStates(pp);
       Set<Definition> filtered = new HashSet<>();
       for (Definition d : state.elements) {
         if (!d.variable.equals(id)) {
           filtered.add(d);
         }
       }
-      state = new DefinitionSetLattice(filtered);
-      state = state.lub(new DefinitionSetLattice(new Definition(id, pp)));
-			newFunction.put(pp, state);
+      state = new ReachingDefinitions(filtered);
+      state = state.lub(new ReachingDefinitions(new Definition(id, pp)));
+      Map<ProgramPoint, ReachingDefinitions> function = DataflowStateMap.getReachingDefinitionsMap();
+			function.put(pp, state);
+      return state;
     }
-		return mk(lattice, newFunction);
+		return mk(elements);
   }
 
   @Override
 	public ReachingDefinitions controlStep(ProgramPoint src, ProgramPoint dest) throws SemanticException {
-    System.out.println("CONTROL: " + src + " -> " + dest);
-    return mk(lattice, function);
+    return mk(elements);
   }
 
 	@Override
 	public ReachingDefinitions pushScope(
 			ScopeToken scope)
 			throws SemanticException {
-		Map<ProgramPoint, DefinitionSetLattice> newFunction = mkNewFunction(function, false);
-		return mk(lattice, newFunction);
+		return mk(elements);
 		// return new ReachingDefinitions((Identifier) variable.pushScope(scope), programPoint);
 	}
 
@@ -134,30 +174,12 @@ public class ReachingDefinitions
 		// 	return null;
 
 		// return new ReachingDefinitions((Identifier) popped, programPoint);
-		Map<ProgramPoint, DefinitionSetLattice> newFunction = mkNewFunction(function, false);
-		return mk(lattice, newFunction);
+		return mk(elements);
 	}
 
 	/* FUNCTIONAL LATTICE */
 
-  @Override
-	public DefinitionSetLattice stateOfUnknown(ProgramPoint key) {
-		return this.isBottom() ? lattice.bottom() : lattice.top();
-	}
-
-  @Override
-	public ReachingDefinitions mk(DefinitionSetLattice lattice,
-			Map<ProgramPoint, DefinitionSetLattice> function) {
-		return new ReachingDefinitions(lattice, function);
-	}
-
-  @Override
-	public ReachingDefinitions top() {
-		return new ReachingDefinitions(lattice.top(), null);
-	}
-
-  @Override
-	public ReachingDefinitions bottom() {
-		return new ReachingDefinitions(lattice.bottom(), null);
+	public ReachingDefinitions stateOfUnknown(ProgramPoint key) {
+		return this.isBottom() ? this.bottom() : this.top();
 	}
 }

@@ -1,10 +1,10 @@
 package it.unive.lisa.analysis.avase;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
 
 import it.unive.lisa.analysis.AbstractState;
 import it.unive.lisa.analysis.ScopeToken;
@@ -22,19 +22,61 @@ import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
-import it.unive.lisa.analysis.dataflow.PPInverseSetLattice;
+import it.unive.lisa.analysis.lattices.InverseSetLattice;
 
 public class Dominance
-  extends FunctionalLattice<Dominance, ProgramPoint, PPInverseSetLattice>
+  extends InverseSetLattice<Dominance, ProgramPoint>
   implements Speculator {
 
-	private Dominance(PPInverseSetLattice lattice,
-			Map<ProgramPoint, PPInverseSetLattice> function) {
-		super(lattice, function);
+	public Dominance(Set<ProgramPoint> elements, boolean isTop) {
+		super(elements, isTop);
 	}
 
+	/**
+	 * Builds the empty set lattice element.
+	 */
 	public Dominance() {
-		super(new PPInverseSetLattice(), new HashMap<ProgramPoint, PPInverseSetLattice>());
+		this(Collections.emptySet(), false);
+	}
+
+	private Dominance(
+			boolean isTop) {
+		this(Collections.emptySet(), isTop);
+	}
+
+	/**
+	 * Builds a singleton set lattice element.
+	 * 
+	 * @param exp the expression
+	 */
+	public Dominance(
+			ProgramPoint exp) {
+		this(Collections.singleton(exp), false);
+	}
+
+	/**
+	 * Builds a set lattice element.
+	 * 
+	 * @param set the set of expression
+	 */
+	public Dominance(
+			Set<ProgramPoint> set) {
+		this(Collections.unmodifiableSet(set), false);
+	}
+
+	@Override
+	public Dominance mk(Set<ProgramPoint> set) {
+		return new Dominance(set);
+	}
+	
+	@Override
+	public Dominance top() {
+		return new Dominance(true);
+	}
+
+	@Override
+	public Dominance bottom() {
+		return new Dominance();
 	}
 
 	public boolean shouldConsiderProgramPoint(ProgramPoint pp) {
@@ -47,7 +89,7 @@ public class Dominance
 		return false;
 	}
 
-	public PPInverseSetLattice initializeState(ProgramPoint pp) {
+	public Dominance initializeState(ProgramPoint pp) {
 		assert shouldConsiderProgramPoint(pp);
 		Set<ProgramPoint> result = new HashSet<>();
 		if (pp.getCFG().getEntrypoints().contains(pp)) {
@@ -59,23 +101,25 @@ public class Dominance
 				}
 			}
 		}
-		return new PPInverseSetLattice(result);
+		return new Dominance(result);
 	}
 
-	public PPInverseSetLattice getPrecedentState(ProgramPoint pp) {
-    if (function == null || !function.containsKey(pp)) {
+	public Dominance getPrecedentState(ProgramPoint pp) {
+    Map<ProgramPoint, Dominance> function = DataflowStateMap.getDominanceMap();
+    assert(function != null);
+    if (!function.containsKey(pp)) {
       return initializeState(pp);
     } else {
       return function.get(pp);
     }
   }
 
-	public PPInverseSetLattice joinPrecedentStates(ProgramPoint pp) throws SemanticException {
-    PPInverseSetLattice state = lattice.bottom();
+	public Dominance joinPrecedentStates(ProgramPoint pp) throws SemanticException {
+    Dominance state = this.bottom();
     for (Edge edge : pp.getCFG().getIngoingEdges((Statement)pp)) {
       ProgramPoint source = edge.getSource();
       if (shouldConsiderProgramPoint(source)) {
-        PPInverseSetLattice prev = getPrecedentState(source);
+        Dominance prev = getPrecedentState(source);
         if (state.isBottom()) {
           state = prev;
         } else {
@@ -90,69 +134,39 @@ public class Dominance
 
   @Override
 	public Dominance normalStep(ProgramPoint pp) throws SemanticException {
-    System.out.println("NORMAL: " + pp);
-		Map<ProgramPoint, PPInverseSetLattice> newFunction = mkNewFunction(function, false);
 		if (shouldConsiderProgramPoint(pp)) {
-      PPInverseSetLattice state = joinPrecedentStates(pp);
-      PPInverseSetLattice current = new PPInverseSetLattice(pp);
+      Dominance state = joinPrecedentStates(pp);
+      Dominance current = new Dominance(pp);
       if (state.isBottom()) {
         state = current;
       } else {
         state = state.glb(current);
       }
-			newFunction.put(pp, state);
-		}
-		return mk(lattice, newFunction);
+      Map<ProgramPoint, Dominance> function = DataflowStateMap.getDominanceMap();
+			function.put(pp, state);
+      return state;
+		} else {
+      return mk(elements);
+    }
   }
 
   @Override
 	public Dominance assignStep(ProgramPoint pp, Identifier id, SymbolicExpression expr) throws SemanticException {
-    System.out.println("ASSIGN: " + pp);
     return normalStep(pp);
   }
 
   @Override
 	public Dominance controlStep(ProgramPoint src, ProgramPoint dest) throws SemanticException {
-    System.out.println("CONTROL: " + src + " -> " + dest);
-
-    PPInverseSetLattice bb = lattice.bottom();
-    PPInverseSetLattice tt = lattice.top();
-    PPInverseSetLattice ll = new PPInverseSetLattice(src);
-    PPInverseSetLattice rr = new PPInverseSetLattice(dest);
-    
-    return mk(lattice, function);
+    return mk(elements);
   }
 
   @Override
 	public Dominance pushScope(ScopeToken token) throws SemanticException {
-    return mk(lattice, function);
+    return mk(elements);
   }
 
   @Override
 	public Dominance popScope(ScopeToken token) throws SemanticException {
-    return mk(lattice, function);
+    return mk(elements);
   }
-
-	/* FUNCTIONAL LATTICE */
-
-  @Override
-	public PPInverseSetLattice stateOfUnknown(ProgramPoint key) {
-		return this.isBottom() ? lattice.bottom() : lattice.top();
-	}
-
-  @Override
-	public Dominance mk(PPInverseSetLattice lattice,
-			Map<ProgramPoint, PPInverseSetLattice> function) {
-		return new Dominance(lattice, function);
-	}
-
-  @Override
-	public Dominance top() {
-		return new Dominance(lattice.top(), null);
-	}
-
-  @Override
-	public Dominance bottom() {
-		return new Dominance(lattice.bottom(), null);
-	}
 }
