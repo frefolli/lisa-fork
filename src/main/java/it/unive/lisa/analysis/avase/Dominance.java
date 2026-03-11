@@ -152,6 +152,12 @@ public class Dominance
 
   @Override
 	public Dominance assignStep(ProgramPoint pp, Identifier id, SymbolicExpression expr) throws SemanticException {
+    System.out.println("[I](" + id + " = " + expr + ")");
+    try {
+    System.out.println("[D](" + AstTransmuter.visit(expr) + ")");
+    } catch(Exception e) {
+      System.err.println(e);
+    }
     return normalStep(pp);
   }
 

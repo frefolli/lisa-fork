@@ -6,7 +6,9 @@ import java.nio.file.Path;
 
 import it.unive.lisa.analysis.avase.Dominance;
 import it.unive.lisa.analysis.avase.ReachingDefinitions;
+import it.unive.lisa.analysis.avase.PathConditions;
 import it.unive.lisa.analysis.avase.AdvancedAbstractState;
+import it.unive.lisa.analysis.traces.TracePartitioning;
 import it.unive.lisa.conf.LiSAConfiguration;
 import it.unive.lisa.conf.LiSAConfiguration.GraphType;
 import it.unive.lisa.imp.IMPFrontend;
@@ -50,7 +52,7 @@ public class Main {
   }
 
   public static void main(String[] args) throws IOException, IllegalArgumentException, ParsingException, AnalysisException {
-    String programName = "simple";
+    String programName = "example";
     if (args.length > 0) {
       programName = args[0];
     }
@@ -77,7 +79,8 @@ public class Main {
       new ValueEnvironment<>(new Interval()),
       new TypeEnvironment<>(new InferredTypes()),
       new Dominance(),
-      new ReachingDefinitions()
+      new ReachingDefinitions(),
+      new PathConditions()
     );
     // conf.abstractState = new OldAbstractState(
     // );

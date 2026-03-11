@@ -2,6 +2,7 @@ plugins {
 	id 'antlr'
   id 'java-library'
   id 'application'
+  id 'ca.coglinc2.javacc' version '3.0.0'
 }
 
 apply from: 'init.gradle'
@@ -31,6 +32,10 @@ dependencies {
 	implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.1'
 	implementation 'org.reflections:reflections:0.9.12'
 
+  implementation group: 'org.javassist', name:'javassist', version:'3.29.1-GA'
+  // implementation name: 'tools'
+  testImplementation 'junit:junit:4.13.2'
+
   antlr 'org.antlr:antlr4:4.11.1'
 }
 
@@ -42,8 +47,21 @@ generateGrammarSource {
 
 sourcesJar {
 	dependsOn generateGrammarSource
+  dependsOn compileJavacc
 }
 
 application {
   mainClass = "it.unive.lisa.Main"
+}
+
+compileJavacc {
+    arguments = [output_directory: compileJavacc.outputDirectory.absolutePath + '/jbse/apps/settings']
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir compileJavacc.outputDirectory
+        }
+    }
 }

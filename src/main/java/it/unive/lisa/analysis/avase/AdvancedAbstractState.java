@@ -90,6 +90,13 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 	public static final String REACHING_DEFINITIONS_REPRESENTATION_KEY = "def";
 
 	/**
+	 * The key that should be used to store the instance of {@link PathConditions}
+	 * inside the {@link StructuredRepresentation} returned by
+	 * {@link #representation()}.
+	 */
+	public static final String PATH_CONDITIONS_REPRESENTATION_KEY = "pc";
+
+	/**
 	 * The domain containing information regarding heap structures
 	 */
 	private final H heapState;
@@ -110,6 +117,8 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 
   private final ReachingDefinitions reachingDefinitions;
 
+  private final PathConditions pathConditions;
+
 	/**
 	 * Builds a new abstract state.
 	 * 
@@ -126,12 +135,14 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 			V valueState,
 			T typeState,
       Dominance dominance,
-      ReachingDefinitions reachingDefinitions) {
+      ReachingDefinitions reachingDefinitions,
+      PathConditions pathConditions) {
 		this.heapState = heapState;
 		this.valueState = valueState;
 		this.typeState = typeState;
     this.dominance = dominance;
     this.reachingDefinitions = reachingDefinitions;
+    this.pathConditions = pathConditions;
 	}
 
 	/**
@@ -168,6 +179,10 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 			ProgramPoint pp,
 			SemanticOracle oracle)
 			throws SemanticException {
+    if (SymbolTable.find(id.getName()) == null) {
+      SymbolTable.add(new SymbolTable.Variable(id.getName()));
+    }
+
 		if (!expression.mightNeedRewriting()) {
 			ValueExpression ve = (ValueExpression) expression;
 			return new AdvancedAbstractState<>(
@@ -175,7 +190,8 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 					valueState.assign(id, ve, pp, this),
 					typeState.assign(id, ve, pp, this),
           dominance.assignStep(pp, id, expression),
-          reachingDefinitions.assignStep(pp, id, expression)
+          reachingDefinitions.assignStep(pp, id, expression),
+          pathConditions.assignStep(pp, id, expression)
       );
 		}
 
@@ -189,6 +205,7 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 
     Dominance d = dominance.assignStep(pp, id, expression);
     ReachingDefinitions rd = reachingDefinitions.assignStep(pp, id, expression);
+    PathConditions pc = pathConditions.assignStep(pp, id, expression);
 		if (exprs.elements.size() == 1) {
 			SymbolicExpression expr = exprs.elements.iterator().next();
 			if (!(expr instanceof ValueExpression))
@@ -196,7 +213,7 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 			ValueExpression ve = (ValueExpression) expr;
 			T t = mo.type.assign(id, ve, pp, mo);
 			V v = mo.value.assign(id, ve, pp, mo);
-			return new AdvancedAbstractState<>(mo.heap, v, t, d, rd);
+			return new AdvancedAbstractState<>(mo.heap, v, t, d, rd, pc);
 		}
 
 		T typeRes = mo.type.bottom();
@@ -210,7 +227,7 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 			typeRes = typeRes.lub(t);
 			valueRes = valueRes.lub(v);
 		}
-		return new AdvancedAbstractState<>(mo.heap, valueRes, typeRes, d, rd);
+		return new AdvancedAbstractState<>(mo.heap, valueRes, typeRes, d, rd, pc);
 	}
 
 	@Override
@@ -226,7 +243,9 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 					valueState.smallStepSemantics(ve, pp, this),
 					typeState.smallStepSemantics(ve, pp, this),
           dominance.normalStep(pp),
-          reachingDefinitions.normalStep(pp));
+          reachingDefinitions.normalStep(pp),
+          pathConditions.normalStep(pp)
+      );
 		}
 
 		MutableOracle<H, V, T> mo = new MutableOracle<>(heapState, valueState, typeState);
@@ -239,6 +258,7 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 
     Dominance d = dominance.normalStep(pp);
     ReachingDefinitions rd = reachingDefinitions.normalStep(pp);
+    PathConditions pc = pathConditions.normalStep(pp);
 		if (exprs.elements.size() == 1) {
 			SymbolicExpression expr = exprs.elements.iterator().next();
 			if (!(expr instanceof ValueExpression))
@@ -250,7 +270,7 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 				// registered in the type domain
 				t = t.assign((Identifier) ve, ve, pp, mo);
 			V v = mo.value.smallStepSemantics(ve, pp, mo);
-			return new AdvancedAbstractState<>(mo.heap, v, t, d, rd);
+			return new AdvancedAbstractState<>(mo.heap, v, t, d, rd, pc);
 		}
 
 		T typeRes = mo.type.bottom();
@@ -269,7 +289,7 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 			valueRes = valueRes.lub(v);
 		}
 
-		return new AdvancedAbstractState<>(mo.heap, valueRes, typeRes, d, rd);
+		return new AdvancedAbstractState<>(mo.heap, valueRes, typeRes, d, rd, pc);
 	}
 
 	private static <H extends HeapDomain<H>,
@@ -314,7 +334,10 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
       ReachingDefinitions rd = reachingDefinitions.controlStep(src, dest);
 			if (rd.isBottom())
 				return bottom();
-			return new AdvancedAbstractState<>(h, v, t, d, rd);
+      PathConditions pc = pathConditions.controlStep(src, dest);
+			if (pc.isBottom())
+				return bottom();
+			return new AdvancedAbstractState<>(h, v, t, d, rd, pc);
 		}
 
 		MutableOracle<H, V, T> mo = new MutableOracle<>(heapState, valueState, typeState);
@@ -329,6 +352,7 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 
     Dominance d = dominance.controlStep(src, dest);
     ReachingDefinitions rd = reachingDefinitions.controlStep(src, dest);
+    PathConditions pc = pathConditions.controlStep(src, dest);
 		if (exprs.elements.size() == 1) {
 			SymbolicExpression expr = exprs.elements.iterator().next();
 			if (!(expr instanceof ValueExpression))
@@ -340,7 +364,7 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 			V v = mo.value.assume(ve, src, dest, mo);
 			if (v.isBottom())
 				return bottom();
-			return new AdvancedAbstractState<>(mo.heap, v, t, d, rd);
+			return new AdvancedAbstractState<>(mo.heap, v, t, d, rd, pc);
 		}
 
 		T typeRes = mo.type.bottom();
@@ -358,7 +382,7 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 		if (typeRes.isBottom() || valueRes.isBottom())
 			return bottom();
 
-		return new AdvancedAbstractState<>(mo.heap, valueRes, typeRes, d, rd);
+		return new AdvancedAbstractState<>(mo.heap, valueRes, typeRes, d, rd, pc);
 	}
 
 	@Override
@@ -415,6 +439,8 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 			if (sat == Satisfiability.BOTTOM)
 				return sat;
 			valuesat = valuesat.lub(sat);
+      
+      // Think about rejecting with Satisfiability.BOTTOM if pathConditions.getPathCondition().surelyFalse()
 		}
 		return heapsat.glb(typesat).glb(valuesat);
 	}
@@ -428,7 +454,8 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 				valueState.pushScope(scope),
 				typeState.pushScope(scope),
         dominance.pushScope(scope),
-        reachingDefinitions.pushScope(scope));
+        reachingDefinitions.pushScope(scope),
+        pathConditions.pushScope(scope));
 	}
 
 	@Override
@@ -440,33 +467,34 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 				valueState.popScope(scope),
 				typeState.popScope(scope),
         dominance.popScope(scope),
-        reachingDefinitions.popScope(scope));
+        reachingDefinitions.popScope(scope),
+        pathConditions.popScope(scope));
 	}
 
 	@Override
 	public AdvancedAbstractState<H, V, T> lubAux(
 			AdvancedAbstractState<H, V, T> other)
 			throws SemanticException {
-    System.out.println("(" + this + ") LUB (" + other + ")");
 		return new AdvancedAbstractState<>(
 				heapState.lub(other.heapState),
 				valueState.lub(other.valueState),
 				typeState.lub(other.typeState),
         dominance.lub(other.dominance),
-        reachingDefinitions.lub(other.reachingDefinitions));
+        reachingDefinitions.lub(other.reachingDefinitions),
+        pathConditions.lub(other.pathConditions));
 	}
 
 	@Override
 	public AdvancedAbstractState<H, V, T> glbAux(
 			AdvancedAbstractState<H, V, T> other)
 			throws SemanticException {
-    System.out.println("(" + this + ") GLB (" + other + ")");
 		return new AdvancedAbstractState<>(
 				heapState.glb(other.heapState),
 				valueState.glb(other.valueState),
 				typeState.glb(other.typeState),
         dominance.glb(other.dominance),
-        reachingDefinitions.glb(other.reachingDefinitions));
+        reachingDefinitions.glb(other.reachingDefinitions),
+        pathConditions.glb(other.pathConditions));
 	}
 
 	@Override
@@ -478,7 +506,8 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 				valueState.widening(other.valueState),
 				typeState.widening(other.typeState),
         dominance.widening(other.dominance),
-        reachingDefinitions.widening(other.reachingDefinitions));
+        reachingDefinitions.widening(other.reachingDefinitions),
+        pathConditions.widening(other.pathConditions));
 	}
 
 	@Override
@@ -490,7 +519,8 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 				valueState.narrowing(other.valueState),
 				typeState.narrowing(other.typeState),
         dominance.narrowing(other.dominance),
-        reachingDefinitions.narrowing(other.reachingDefinitions));
+        reachingDefinitions.narrowing(other.reachingDefinitions),
+        pathConditions.narrowing(other.pathConditions));
 	}
 
 	@Override
@@ -501,27 +531,52 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 				&& valueState.lessOrEqual(other.valueState)
 				&& typeState.lessOrEqual(other.typeState)
 				&& dominance.lessOrEqual(other.dominance)
-				&& reachingDefinitions.lessOrEqual(other.reachingDefinitions);
+				&& reachingDefinitions.lessOrEqual(other.reachingDefinitions)
+				&& pathConditions.lessOrEqual(other.pathConditions);
 	}
 
 	@Override
 	public AdvancedAbstractState<H, V, T> top() {
-		return new AdvancedAbstractState<>(heapState.top(), valueState.top(), typeState.top(), dominance.top(), reachingDefinitions.top());
+		return new AdvancedAbstractState<>(
+        heapState.top(),
+        valueState.top(),
+        typeState.top(),
+        dominance.top(),
+        reachingDefinitions.top(),
+        pathConditions.top()
+    );
 	}
 
 	@Override
 	public AdvancedAbstractState<H, V, T> bottom() {
-		return new AdvancedAbstractState<>(heapState.bottom(), valueState.bottom(), typeState.bottom(), dominance.bottom(), reachingDefinitions.bottom());
+		return new AdvancedAbstractState<>(
+      heapState.bottom(),
+      valueState.bottom(),
+      typeState.bottom(),
+      dominance.bottom(),
+      reachingDefinitions.bottom(),
+      pathConditions.bottom()
+    );
 	}
 
 	@Override
 	public boolean isTop() {
-		return heapState.isTop() && valueState.isTop() && typeState.isTop() && dominance.isTop() && reachingDefinitions.isTop();
+		return heapState.isTop() &&
+       valueState.isTop() &&
+       typeState.isTop() &&
+       dominance.isTop() &&
+       reachingDefinitions.isTop() &&
+       pathConditions.isTop();
 	}
 
 	@Override
 	public boolean isBottom() {
-		return heapState.isBottom() && valueState.isBottom() && typeState.isBottom() && dominance.isBottom() && reachingDefinitions.isBottom();
+		return heapState.isBottom() &&
+       valueState.isBottom() &&
+       typeState.isBottom() &&
+       dominance.isBottom() &&
+       reachingDefinitions.isBottom() &&
+       pathConditions.isBottom();
 	}
 
 	@Override
@@ -533,7 +588,9 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 				valueState.forgetIdentifier(id),
 				typeState.forgetIdentifier(id),
         dominance,
-        reachingDefinitions);
+        reachingDefinitions,
+        pathConditions
+    );
 	}
 
 	@Override
@@ -545,7 +602,9 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 				valueState.forgetIdentifiersIf(test),
 				typeState.forgetIdentifiersIf(test),
         dominance,
-        reachingDefinitions);
+        reachingDefinitions,
+        pathConditions
+    );
 	}
 
 	@Override
@@ -557,6 +616,7 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 		result = prime * result + ((typeState == null) ? 0 : typeState.hashCode());
 		result = prime * result + ((dominance == null) ? 0 : dominance.hashCode());
 		result = prime * result + ((reachingDefinitions == null) ? 0 : reachingDefinitions.hashCode());
+		result = prime * result + ((pathConditions == null) ? 0 : pathConditions.hashCode());
 		return result;
 	}
 
@@ -595,6 +655,11 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 				return false;
 		} else if (!reachingDefinitions.equals(other.reachingDefinitions))
 			return false;
+		if (pathConditions == null) {
+			if (other.pathConditions != null)
+				return false;
+		} else if (!pathConditions.equals(other.pathConditions))
+			return false;
 		return true;
 	}
 
@@ -610,12 +675,15 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 		StructuredRepresentation v = valueState.representation();
 		StructuredRepresentation d = dominance.representation();
 		StructuredRepresentation rd = reachingDefinitions.representation();
+		StructuredRepresentation pc = pathConditions.representation();
 		return new ObjectRepresentation(Map.of(
 				HEAP_REPRESENTATION_KEY, h,
 				TYPE_REPRESENTATION_KEY, t,
 				VALUE_REPRESENTATION_KEY, v,
         DOMINANCE_REPRESENTATION_KEY, d,
-        REACHING_DEFINITIONS_REPRESENTATION_KEY, rd));
+        REACHING_DEFINITIONS_REPRESENTATION_KEY, rd,
+        PATH_CONDITIONS_REPRESENTATION_KEY, pc
+    ));
 	}
 
 	@Override
@@ -679,17 +747,38 @@ public class AdvancedAbstractState<H extends HeapDomain<H>,
 
 	@Override
 	public AdvancedAbstractState<H, V, T> withTopMemory() {
-		return new AdvancedAbstractState<>(heapState.top(), valueState, typeState, dominance, reachingDefinitions);
-	}
+    return new AdvancedAbstractState<>(
+        heapState.top(),
+        valueState,
+        typeState,
+        dominance,
+        reachingDefinitions,
+        pathConditions
+        );
+  }
 
-	@Override
-	public AdvancedAbstractState<H, V, T> withTopValues() {
-		return new AdvancedAbstractState<>(heapState, valueState.top(), typeState, dominance, reachingDefinitions);
-	}
+  @Override
+  public AdvancedAbstractState<H, V, T> withTopValues() {
+    return new AdvancedAbstractState<>(
+        heapState,
+        valueState.top(),
+        typeState,
+        dominance,
+        reachingDefinitions,
+        pathConditions
+        );
+  }
 
-	@Override
-	public AdvancedAbstractState<H, V, T> withTopTypes() {
-		return new AdvancedAbstractState<>(heapState, valueState, typeState.top(), dominance, reachingDefinitions);
+  @Override
+  public AdvancedAbstractState<H, V, T> withTopTypes() {
+    return new AdvancedAbstractState<>(
+        heapState,
+        valueState,
+        typeState.top(),
+        dominance,
+        reachingDefinitions,
+        pathConditions
+        );
 	}
 
 	private static class MutableOracle<H extends HeapDomain<H>,
