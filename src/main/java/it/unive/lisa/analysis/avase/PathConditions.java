@@ -30,29 +30,25 @@ import jbse.val.Expression;
 
 
 public class PathConditions
-  implements BaseLattice<PathConditions>, Speculator {
+  implements BaseLattice<PathConditions>, Speculator<PathConditions> {
 
-  Primitive pathCondition;
+  Primitive condition;
 
 	/**
 	 * Builds a (nonBottom) path condition.
 	 *
-	 * @param pathCondition, the path condition
+	 * @param condition, the path condition
 	 */
-	public PathConditions(Primitive pathCondition) {
-    this.pathCondition = pathCondition;
+	private PathConditions(Primitive condition) {
+    this.condition = condition;
 	}
 
-	public PathConditions mk(Primitive pathCondition) {
-		return new PathConditions(pathCondition);
+	public PathConditions mk(Primitive condition) {
+		return new PathConditions(Calculator.simplify(condition));
 	}
 
 	private static Primitive implicit(boolean isBottom) {
-    try {
-      return Simplex.make(!isBottom);
-    } catch (InvalidOperandException e) {
-      throw new RuntimeException(e.toString());
-    }
+    return Calculator.constant(!isBottom);
 	}
 
 	private PathConditions(boolean isBottom) {
@@ -78,16 +74,16 @@ public class PathConditions
 
 	@Override
 	public boolean isTop() {
-    return this.pathCondition.surelyTrue();
+    return this.condition.surelyTrue();
 	}
 
 	@Override
 	public boolean isBottom() {
-    return this.pathCondition.surelyFalse();
+    return this.condition.surelyFalse();
 	}
 
-  public Primitive getPathCondition() {
-    return this.pathCondition;
+  public Primitive getCondition() {
+    return this.condition;
   }
 
   /* Speculator */
@@ -107,7 +103,7 @@ public class PathConditions
 		return this.top();
 	}
 
-	public PathConditions getPrecedentState(ProgramPoint pp) {
+	public PathConditions getState(ProgramPoint pp) {
     Map<ProgramPoint, PathConditions> function = DataflowStateMap.getPathConditionsMap();
     assert(function != null);
     if (!function.containsKey(pp)) {
@@ -117,12 +113,22 @@ public class PathConditions
     }
   }
 
+	public PathConditions getControl(ProgramPoint pp) {
+    Map<ProgramPoint, ControlConditions> function = DataflowStateMap.getControlConditionsMap();
+    assert(function != null);
+    if (!function.containsKey(pp)) {
+      return initializeState(pp);
+    } else {
+      return mk(function.get(pp).getCondition());
+    }
+  }
+
 	public PathConditions joinPrecedentStates(ProgramPoint pp) throws SemanticException {
     PathConditions state = this.top();
     for (Edge edge : pp.getCFG().getIngoingEdges((Statement)pp)) {
       ProgramPoint source = edge.getSource();
       if (shouldConsiderProgramPoint(source)) {
-        PathConditions prev = getPrecedentState(source);
+        PathConditions prev = getState(source);
         if (state.isTop()) {
           state = prev;
         } else {
@@ -138,77 +144,46 @@ public class PathConditions
   @Override
 	public PathConditions normalStep(ProgramPoint pp) throws SemanticException {
 		if (shouldConsiderProgramPoint(pp)) {
-      PathConditions state = joinPrecedentStates(pp);
+      PathConditions precedent = joinPrecedentStates(pp);
+      PathConditions control = getControl(pp);
+      PathConditions state = precedent.glb(control);
       Map<ProgramPoint, PathConditions> function = DataflowStateMap.getPathConditionsMap();
 			function.put(pp, state);
+      System.out.println("[S:AS](" + pp + " -> " + control + " GLB " + precedent + " = " + state + ")");
       return state;
 		} else {
-      return mk(pathCondition);
+      return mk(condition);
     }
   }
 
   @Override
 	public PathConditions assignStep(ProgramPoint pp, Identifier id, SymbolicExpression expr) throws SemanticException {
-    return normalStep(pp);
-  }
-
-  private int dumpCfg(ProgramPoint pp, String mark, int counter) {
-    int id = counter++;
-    System.out.println("[" + mark + "][" + id + "]<" + pp.getClass() + ">" + pp + " BEGIN ");
-    for (Edge edge : pp.getCFG().getIngoingEdges((Statement)pp)) {
-      ProgramPoint source = edge.getSource();
-      counter = dumpCfg(source, mark, counter);
+		if (shouldConsiderProgramPoint(pp)) {
+      PathConditions precedent = joinPrecedentStates(pp);
+      PathConditions control = getControl(pp);
+      PathConditions state = precedent.glb(control);
+      Map<ProgramPoint, PathConditions> function = DataflowStateMap.getPathConditionsMap();
+			function.put(pp, state);
+      System.out.println("[S:AS](" + pp + " -> " + control + " GLB " + precedent + " = " + state + ")");
+      return state;
+		} else {
+      return mk(condition);
     }
-    System.out.println("[" + mark + "][" + id + "]<" + pp.getClass() + ">" + pp + " END ");
-    return counter;
   }
 
   @Override
-	public PathConditions controlStep(ProgramPoint condition, ProgramPoint branch) throws SemanticException {
-    CFG cfg = condition.getCFG();
-    boolean condition_is_true = false;
-    if (condition == cfg.getMostRecentGuard(branch)) {
-      ControlFlowStructure cfs = cfg.getControlFlowStructureOf(condition);
-      if (cfs instanceof IfThenElse) {
-        IfThenElse stmt = (IfThenElse)cfs;
-        if (stmt.getTrueBranch().contains((Statement)branch)) {
-          condition_is_true = true;
-        } else if (stmt.getFalseBranch().contains((Statement)branch)) {
-          condition_is_true = false;
-        } else {
-          System.err.println("Something is off with " + stmt);
-        }
-      } else if (cfs instanceof Loop) {
-        Loop stmt = (Loop)cfs;
-        if (stmt.contains((Statement)branch)) {
-          condition_is_true = true;
-        } else if (stmt.getFirstFollower().equals(branch)) {
-          condition_is_true = false;
-        } else {
-          System.err.println("Something is off with " + stmt);
-        }
-      } else {
-        System.err.println(cfg.getClass() + " is not a supported ControlFlowStructure");
-      }
-    } else {
-      System.err.println("controlStep.src is not a Guard");
-    }
-    if (condition_is_true) {
-      System.out.println("[CS][" + condition + "]<TRUE>" + branch);
-    } else {
-      System.out.println("[CS][" + condition + "]<FALSE>" + branch);
-    }
-    return mk(pathCondition);
+	public PathConditions controlStep(ProgramPoint src, ProgramPoint dest) throws SemanticException {
+    return mk(condition);
   }
 
   @Override
 	public PathConditions pushScope(ScopeToken token) throws SemanticException {
-    return mk(pathCondition);
+    return mk(condition);
   }
 
   @Override
 	public PathConditions popScope(ScopeToken token) throws SemanticException {
-    return mk(pathCondition);
+    return mk(condition);
   }
 
 	@Override
@@ -217,7 +192,7 @@ public class PathConditions
 			return Lattice.bottomRepresentation();
 		if (isTop())
 			return Lattice.topRepresentation();
-    return new StringRepresentation(pathCondition.toString());
+    return new StringRepresentation(condition.toString());
 	}
 
 	@Override
@@ -229,31 +204,23 @@ public class PathConditions
 	@Override
 	public PathConditions lubAux(PathConditions other)
 			throws SemanticException {
-    try {
-      PathConditions state = mk(Expression.makeExpressionBinary(pathCondition, Operator.OR, other.getPathCondition()));
-      return state;
-    } catch (InvalidOperandException e) {
-      throw new RuntimeException(e.toString());
-    } catch (InvalidOperatorException e) {
-      throw new RuntimeException(e.toString());
-    } catch (InvalidTypeException e) {
-      throw new RuntimeException(e.toString());
-    }
+    return mk(Calculator.binaryExpression(condition, Operator.OR, other.condition));
 	}
 
   /* Towards BOTTOM */
 	@Override
 	public PathConditions glbAux(PathConditions other)
 			throws SemanticException {
-    try {
-      PathConditions state = mk(Expression.makeExpressionBinary(pathCondition, Operator.AND, other.getPathCondition()));
-      return state;
-    } catch (InvalidOperandException e) {
-      throw new RuntimeException(e.toString());
-    } catch (InvalidOperatorException e) {
-      throw new RuntimeException(e.toString());
-    } catch (InvalidTypeException e) {
-      throw new RuntimeException(e.toString());
-    }
+    return mk(Calculator.binaryExpression(condition, Operator.AND, other.condition));
+	}
+
+  /* Invert Path Condition */
+	public PathConditions invert() {
+    return mk(Calculator.unaryExpression(Operator.NOT, this.condition));
+	}
+
+	@Override
+	public String toString() {
+		return representation().toString();
 	}
 }

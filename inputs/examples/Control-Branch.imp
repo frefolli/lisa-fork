@@ -1,0 +1,26 @@
+class ControlBranch {
+  e1(i) {
+    def x = 0;
+    if (i > 0) {
+      x = 1;
+    } else {
+      x = 2;
+    }
+    def y = x + 1;
+  }
+  e2(i) {
+    def x = 0;
+    if (i > 0) {
+      x = 1;
+    }
+    def y = x + 1;
+  }
+  e3(i) {
+    def x = 0;
+    while (i > 0) {
+      x = x + 1;
+      i = i - 1;
+    }
+    def y = x + 1;
+  }
+}

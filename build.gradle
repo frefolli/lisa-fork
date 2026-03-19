@@ -5,15 +5,16 @@ plugins {
   id 'ca.coglinc2.javacc' version '3.0.0'
 }
 
+repositories {
+  mavenCentral()
+  gradlePluginPortal()
+}
+
 apply from: 'init.gradle'
 apply from: 'java.gradle'
 
 group = 'it.unive'
 version = '1.0'
-
-repositories {
-  mavenCentral()
-}
 
 dependencies {
 	implementation 'org.apache.commons:commons-collections4:4.4'
@@ -31,6 +32,8 @@ dependencies {
 	implementation 'org.apache.logging.log4j:log4j-core:2.17.1'
 	implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.1'
 	implementation 'org.reflections:reflections:0.9.12'
+  implementation "org.sosy-lab:java-smt:4.1.1"
+  implementation "org.sosy-lab:javasmt-solver-z3:4.14.0"
 
   implementation group: 'org.javassist', name:'javassist', version:'3.29.1-GA'
   // implementation name: 'tools'
@@ -52,6 +55,13 @@ sourcesJar {
 
 application {
   mainClass = "it.unive.lisa.Main"
+  // mainClass = "it.unive.lisa.Test"
+}
+
+jar {
+  manifest {
+   attributes 'Main-Class': 'it.unive.lisa.Main'
+  }
 }
 
 compileJavacc {
@@ -64,4 +74,8 @@ sourceSets {
             srcDir compileJavacc.outputDirectory
         }
     }
+}
+
+tasks.withType(JavaExec) {
+    jvmArgs "-Djava.library.path=/usr/lib64:/usr/lib64/z3"
 }

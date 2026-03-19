@@ -1,0 +1,15 @@
+class Complete {
+  main(y) {
+    def x = 0;
+    if (y > 0) {
+      x = 1;
+    } else {
+      x = 2;
+    }
+    def z = 0;
+    while (x > 1) {
+      z = z + 1;
+      x = x - 1;
+    }
+  }
+}

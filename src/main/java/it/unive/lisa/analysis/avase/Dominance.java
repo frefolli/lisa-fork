@@ -26,7 +26,7 @@ import it.unive.lisa.analysis.lattices.InverseSetLattice;
 
 public class Dominance
   extends InverseSetLattice<Dominance, ProgramPoint>
-  implements Speculator {
+  implements Speculator<Dominance> {
 
 	public Dominance(Set<ProgramPoint> elements, boolean isTop) {
 		super(elements, isTop);
@@ -152,17 +152,12 @@ public class Dominance
 
   @Override
 	public Dominance assignStep(ProgramPoint pp, Identifier id, SymbolicExpression expr) throws SemanticException {
-    System.out.println("[I](" + id + " = " + expr + ")");
-    try {
-    System.out.println("[D](" + AstTransmuter.visit(expr) + ")");
-    } catch(Exception e) {
-      System.err.println(e);
-    }
     return normalStep(pp);
   }
 
   @Override
 	public Dominance controlStep(ProgramPoint src, ProgramPoint dest) throws SemanticException {
+    System.out.println("[D:CS](" + src + " -> " + dest + ")");
     return mk(elements);
   }
 

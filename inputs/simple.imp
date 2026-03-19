@@ -1,10 +1,12 @@
-class Example {
+class Simple {
   main(allneg) {
-    def X = 0;
-    if (allneg >= 1) {
-      X = 1;
-    } else {
-      X = 2;
+    if (allneg >= 2) {
+      def X = 0;
+      if (allneg >= 1) {
+        X = 1;
+      } else {
+        X = 2;
+      }
     }
   }
 }

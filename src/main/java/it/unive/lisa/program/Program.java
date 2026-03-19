@@ -138,6 +138,17 @@ public class Program extends Unit {
 	}
 
 	/**
+	 * Yields the collection of {@link ClassUnit}s defined in this program. Each
+	 * compilation unit is uniquely identified by its name, meaning that there
+	 * are no two compilation units having the same name in a program.
+	 * 
+	 * @return the collection of compilation units
+	 */
+	public final Collection<Map.Entry<String, Unit>> getUnitsEx() {
+		return units.entrySet();
+	}
+
+	/**
 	 * Yields the {@link ClassUnit} defined in this unit having the given name
 	 * ({@link ClassUnit#getName()}), if any.
 	 * 

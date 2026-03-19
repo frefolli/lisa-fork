@@ -2,11 +2,12 @@ class Example {
   main(in0, in1, in2) {
     def x = in0 - in1 * in2;
     def y = in1 - in0 * in2;
-    def z = 0;
+    def z = -x + y;
+    def w = 0;
     if (x > y) {
-      z = 1 + x + y;
+      w = 1 + x + y;
     } else {
-      z = 2;
+      w = 2;
     }
   }
 }

@@ -25,20 +25,20 @@ import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.analysis.lattices.SetLattice;
 
-public class ReachingDefinitions extends SetLattice<ReachingDefinitions, Definition>
-  implements Speculator<ReachingDefinitions> {
-	public ReachingDefinitions(Set<Definition> elements, boolean isTop) {
+public class KilledDefinitions extends SetLattice<KilledDefinitions, Definition>
+  implements Speculator<KilledDefinitions> {
+	public KilledDefinitions(Set<Definition> elements, boolean isTop) {
 		super(elements, isTop);
 	}
 
 	/**
 	 * Builds the empty set lattice element.
 	 */
-	public ReachingDefinitions() {
+	public KilledDefinitions() {
 		this(Collections.emptySet(), false);
 	}
 
-	private ReachingDefinitions(
+	private KilledDefinitions(
 			boolean isTop) {
 		this(Collections.emptySet(), isTop);
 	}
@@ -48,7 +48,7 @@ public class ReachingDefinitions extends SetLattice<ReachingDefinitions, Definit
 	 * 
 	 * @param exp the expression
 	 */
-	public ReachingDefinitions(
+	public KilledDefinitions(
 			Definition exp) {
 		this(Collections.singleton(exp), false);
 	}
@@ -58,23 +58,23 @@ public class ReachingDefinitions extends SetLattice<ReachingDefinitions, Definit
 	 * 
 	 * @param set the set of expression
 	 */
-	public ReachingDefinitions(
+	public KilledDefinitions(
 			Set<Definition> set) {
 		this(Collections.unmodifiableSet(set), false);
 	}
 	@Override
-	public ReachingDefinitions mk(Set<Definition> set) {
-		return new ReachingDefinitions(set);
+	public KilledDefinitions mk(Set<Definition> set) {
+		return new KilledDefinitions(set);
 	}
 	
 	@Override
-	public ReachingDefinitions top() {
-		return new ReachingDefinitions(true);
+	public KilledDefinitions top() {
+		return new KilledDefinitions(true);
 	}
 
 	@Override
-	public ReachingDefinitions bottom() {
-		return new ReachingDefinitions();
+	public KilledDefinitions bottom() {
+		return new KilledDefinitions();
 	}
 
 	public boolean shouldConsiderProgramPoint(ProgramPoint pp) {
@@ -87,23 +87,18 @@ public class ReachingDefinitions extends SetLattice<ReachingDefinitions, Definit
 		return false;
 	}
 
-	public ReachingDefinitions initializeState(ProgramPoint pp) {
-		assert shouldConsiderProgramPoint(pp);
-		return new ReachingDefinitions();
-	}
-
 	public ReachingDefinitions getPrecedentState(ProgramPoint pp) {
     Map<ProgramPoint, ReachingDefinitions> function = DataflowStateMap.getReachingDefinitionsMap();
     assert(function != null);
     if (!function.containsKey(pp)) {
-      return initializeState(pp);
+      return new ReachingDefinitions();
     } else {
       return function.get(pp);
     }
   }
 
 	public ReachingDefinitions joinPrecedentStates(ProgramPoint pp) throws SemanticException {
-    ReachingDefinitions state = this.bottom();
+    ReachingDefinitions state = new ReachingDefinitions();
     for (Edge edge : pp.getCFG().getIngoingEdges((Statement)pp)) {
       ProgramPoint source = edge.getSource();
       if (shouldConsiderProgramPoint(source)) {
@@ -121,28 +116,22 @@ public class ReachingDefinitions extends SetLattice<ReachingDefinitions, Definit
   /* SPECULATOR */
 
   @Override
-	public ReachingDefinitions normalStep(ProgramPoint pp) throws SemanticException {
-		if (shouldConsiderProgramPoint(pp)) {
-      ReachingDefinitions state = joinPrecedentStates(pp);
-      Map<ProgramPoint, ReachingDefinitions> function = DataflowStateMap.getReachingDefinitionsMap();
-			function.put(pp, state);
-		}
+	public KilledDefinitions normalStep(ProgramPoint pp) throws SemanticException {
 		return mk(elements);
   }
 
   @Override
-	public ReachingDefinitions assignStep(ProgramPoint pp, Identifier id, SymbolicExpression expr) throws SemanticException {
+	public KilledDefinitions assignStep(ProgramPoint pp, Identifier id, SymbolicExpression expr) throws SemanticException {
 		if (shouldConsiderProgramPoint(pp)) {
-      ReachingDefinitions state = joinPrecedentStates(pp);
+      ReachingDefinitions precedents = joinPrecedentStates(pp);
       Set<Definition> filtered = new HashSet<>();
-      for (Definition d : state.elements) {
-        if (!d.variable.equals(id)) {
+      for (Definition d : precedents.elements) {
+        if (d.variable.equals(id)) {
           filtered.add(d);
         }
       }
-      state = new ReachingDefinitions(filtered);
-      state = state.lub(new ReachingDefinitions(new Definition(id, pp)));
-      Map<ProgramPoint, ReachingDefinitions> function = DataflowStateMap.getReachingDefinitionsMap();
+      KilledDefinitions state = new KilledDefinitions(filtered);
+      Map<ProgramPoint, KilledDefinitions> function = DataflowStateMap.getKilledDefinitionsMap();
 			function.put(pp, state);
       return state;
     }
@@ -150,20 +139,20 @@ public class ReachingDefinitions extends SetLattice<ReachingDefinitions, Definit
   }
 
   @Override
-	public ReachingDefinitions controlStep(ProgramPoint src, ProgramPoint dest) throws SemanticException {
+	public KilledDefinitions controlStep(ProgramPoint src, ProgramPoint dest) throws SemanticException {
     return mk(elements);
   }
 
 	@Override
-	public ReachingDefinitions pushScope(
+	public KilledDefinitions pushScope(
 			ScopeToken scope)
 			throws SemanticException {
 		return mk(elements);
-		// return new ReachingDefinitions((Identifier) variable.pushScope(scope), programPoint);
+		// return new KilledDefinitions((Identifier) variable.pushScope(scope), programPoint);
 	}
 
 	@Override
-	public ReachingDefinitions popScope(
+	public KilledDefinitions popScope(
 			ScopeToken scope)
 			throws SemanticException {
 		// if (!variable.canBeScoped())
@@ -173,13 +162,13 @@ public class ReachingDefinitions extends SetLattice<ReachingDefinitions, Definit
 		// if (popped == null)
 		// 	return null;
 
-		// return new ReachingDefinitions((Identifier) popped, programPoint);
+		// return new KilledDefinitions((Identifier) popped, programPoint);
 		return mk(elements);
 	}
 
 	/* FUNCTIONAL LATTICE */
 
-	public ReachingDefinitions stateOfUnknown(ProgramPoint key) {
+	public KilledDefinitions stateOfUnknown(ProgramPoint key) {
 		return this.isBottom() ? this.bottom() : this.top();
 	}
 }

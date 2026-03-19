@@ -1,0 +1,46 @@
+class ControlFlow {
+  es1(i) {
+    def x = 0;
+    while (i > 0) {
+      x = x + 1;
+      i = i - 1;
+    }
+    def y = x + 1;
+    while (i < y) {
+      y = y + x;
+      i = i + 1;
+    }
+    def z = x * y;
+  }
+  es2(i) {
+    def x = 0;
+    if (i > 10) {
+      x = 1;
+      if (i < 15) {
+        x = 2;
+      }
+    } else {
+      if (i > 5) {
+        x = 3;
+      } else {
+        x = 4;
+      }
+    }
+    def y = x * (x - 1);
+  }
+  es3(i) {
+    def x = 0;
+    while (i > 0) {
+      x = x + 1;
+      i = i - 1;
+      if (x > 10) {
+        x = 0;
+      }
+    }
+    def y = x + 1;
+    if (i < y) {
+      y = 0;
+    }
+    def z = x * y;
+  }
+}

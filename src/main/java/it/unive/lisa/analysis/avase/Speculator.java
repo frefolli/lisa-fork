@@ -5,8 +5,9 @@ import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.symbolic.SymbolicExpression;
 import it.unive.lisa.symbolic.value.Identifier;
 import it.unive.lisa.analysis.ScopeToken;
+import it.unive.lisa.analysis.BaseLattice;
 
-public interface Speculator {
+public interface Speculator<S extends Speculator<S>> extends BaseLattice<S> {
 	/**
 	 * Returns a copy of itself after applying the speculating logic to a generic statement.
    * In the case of Dataflow Analysis Components, this coincides with the Dataflow Step

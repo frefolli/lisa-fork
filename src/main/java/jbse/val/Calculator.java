@@ -1113,7 +1113,7 @@ public abstract class Calculator {
         	}
         	return this;
     	}
-    }    
+    }
 
     /**
      * Converts the topmost {@link Primitive} on the stack to a 

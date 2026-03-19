@@ -195,6 +195,15 @@ public final class Expression extends PrimitiveSymbolicComputed {
     }
 
     /**
+     * Checks whether the expression is binary.
+     * 
+     * @return {@code true} iff this expression is binary.
+     */
+    public boolean isBinary() {
+        return (this.firstOp != null);
+    }
+
+    /**
      * Gets the operand of a unary {@link Expression}.
      * 
      * @return a {@link Primitive}.
