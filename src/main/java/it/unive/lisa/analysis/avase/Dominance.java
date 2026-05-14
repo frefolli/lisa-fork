@@ -143,6 +143,8 @@ public class Dominance
         state = state.glb(current);
       }
       Map<ProgramPoint, Dominance> function = DataflowStateMap.getDominanceMap();
+      System.out.println(pp + " in= " + pp.getCFG().getIngoingEdges((Statement)pp));
+      System.out.println(pp + " out= " + pp.getCFG().getOutgoingEdges((Statement)pp));
 			function.put(pp, state);
       return state;
 		} else {

@@ -608,6 +608,7 @@ public class CFG extends CodeGraph<CFG, Statement, Edge> implements CodeMember {
 		// descending one: the latter will need full results to start applying
 		// glbs/narrowings from a post-fixpoint
 		boolean isOptimized = conf.optimize && conf.descendingPhaseType == DescendingPhaseType.NONE;
+    isOptimized = false;
 		BackwardFixpoint<CFG, Statement, Edge, CompoundState<A>> fix = isOptimized
 				? new OptimizedBackwardFixpoint<>(this, false, conf.hotspots)
 				: new BackwardFixpoint<>(this, false);

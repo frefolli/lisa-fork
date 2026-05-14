@@ -1,4 +1,4 @@
-class ControlFlow {
+class ControlDependencies {
   es1(i) {
     def x = 0;
     while (i > 0) {
@@ -42,5 +42,26 @@ class ControlFlow {
       y = 0;
     }
     def z = x * y;
+  }
+  es4(i, x, y) {
+    if (x > 0) {
+      while (i > 0) {
+        i = i - 1;
+        y = y + x;
+        if (i == 0) {
+          y = -y;
+        }
+      }
+    } else {
+      if (i < 0) {
+        y = -1;
+      }
+      if (i > 5) {
+        y = y * 2;
+      } else {
+        y = y * x;
+      }
+    }
+    return y;
   }
 }

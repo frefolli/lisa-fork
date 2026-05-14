@@ -13,8 +13,19 @@ import it.unive.lisa.analysis.avase.Speculator;
 import it.unive.lisa.analysis.avase.Dominance;
 import it.unive.lisa.analysis.avase.ReachingDefinitions;
 import it.unive.lisa.analysis.avase.KilledDefinitions;
-import it.unive.lisa.analysis.avase.PathConditions;
-import it.unive.lisa.analysis.avase.ControlConditions;
+
+import it.unive.lisa.analysis.avase.ProgramInspector;
+import it.unive.lisa.analysis.avase.PreDominators;
+import it.unive.lisa.analysis.avase.PostDominators;
+import it.unive.lisa.analysis.avase.ImmediatePreDominators;
+import it.unive.lisa.analysis.avase.ImmediatePostDominators;
+import it.unive.lisa.analysis.avase.PreDomination;
+import it.unive.lisa.analysis.avase.PostDomination;
+import it.unive.lisa.analysis.avase.ImmediatePreDomination;
+import it.unive.lisa.analysis.avase.ImmediatePostDomination;
+import it.unive.lisa.analysis.avase.PreDominanceFrontier;
+import it.unive.lisa.analysis.avase.PostDominanceFrontier;
+
 import it.unive.lisa.analysis.avase.AdvancedAbstractState;
 import it.unive.lisa.analysis.traces.TracePartitioning;
 import it.unive.lisa.conf.LiSAConfiguration;
@@ -30,6 +41,7 @@ import it.unive.lisa.analysis.nonrelational.value.TypeEnvironment;
 import it.unive.lisa.analysis.nonrelational.value.ValueEnvironment;
 import it.unive.lisa.analysis.numeric.Interval;
 import it.unive.lisa.analysis.types.InferredTypes;
+import it.unive.lisa.analysis.avase.Documenter;
 
 public class Main {
   private static void assertInputFileExists(String filePath) throws IllegalArgumentException {
@@ -71,10 +83,17 @@ public class Main {
       // we parse the program to get the CFG representation of the code in it
       Program program = IMPFrontend.processFile(inputPath);
       
-      if (cliArgs.isVerbose()) {
-        ProgramInspector.visit(program);
-        return;
-      }
+      ProgramInspector.computeAll(program);
+      PreDominators.computeAll(program);
+      PostDominators.computeAll(program);
+      ImmediatePreDominators.computeAll(program);
+      ImmediatePostDominators.computeAll(program);
+      PreDomination.computeAll(program);
+      PostDomination.computeAll(program);
+      ImmediatePreDomination.computeAll(program);
+      ImmediatePostDomination.computeAll(program);
+      PreDominanceFrontier.computeAll(program);
+      PostDominanceFrontier.computeAll(program);
 
       // we build a new configuration for the analysis
       LiSAConfiguration conf = new DefaultConfiguration();
@@ -85,6 +104,9 @@ public class Main {
 
       Map<String, Speculator> speculators = new HashMap<>();
       List<String> speculatorsOrder = new ArrayList<>();
+      // speculators.put(String.of("IPOD"), new ImmediatePostDominators());
+      // speculators.put(String.of("rPOD"), new PostDomination());
+      // speculators.put(String.of("rIPOD"), new ImmediatePostDomination());
 
       if (cliArgs.withReachingDefinitions()) {
         String key = "RD";
@@ -114,6 +136,8 @@ public class Main {
 
       // finally, we tell LiSA to analyze the program
       lisa.run(program);
+
+      Documenter.dump(outputPath);
     } catch (CommandLineException e) {
       cli.printHelp();
       if (e.isError()) {
