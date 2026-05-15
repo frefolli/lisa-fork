@@ -33,7 +33,6 @@ public class PreDominators extends ProgramVisitor {
           state.add(p);
         }
       }
-      System.out.println("DEBUG: Set PED[" + pp + "] = " + state);
       function.put(pp, state);
     }
   }
@@ -52,7 +51,6 @@ public class PreDominators extends ProgramVisitor {
         if (!old_state.equals(new_state)) {
           changed = true;
           function.put(pp, new_state);
-          System.out.println("Changed " + pp + " was " + old_state + " now is " + new_state);
         }
       }
     }
@@ -64,9 +62,6 @@ public class PreDominators extends ProgramVisitor {
     for (Edge edge : cfg.getIngoingEdges((Statement)pp)) {
       ProgramPoint peer = edge.getSource();
       Set<ProgramPoint> peer_state = function.get(peer);
-      if (peer_state == null) {
-        System.out.println("WARN: PED[" + peer + "] = NULL");
-      }
       if (state == null) {
         state = new HashSet(peer_state);
       } else {

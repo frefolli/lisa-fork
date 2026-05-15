@@ -23,7 +23,6 @@ public class ProgramVisitor {
     } else {
       throw new AvaseImplException("Uknown unit class: " + unit.getClass());
     }
-    System.out.println("Concluded visit of " + getClass() + " for " + unit);
   }
 
   public void visitProgram(Program program) {

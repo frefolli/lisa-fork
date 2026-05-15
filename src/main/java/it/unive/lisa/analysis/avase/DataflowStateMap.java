@@ -25,6 +25,7 @@ public class DataflowStateMap {
   private static final Map<ProgramPoint, Set<ProgramPoint>> postDominanceFrontierMap = new HashMap<>();
   private static final Map<ProgramPoint, Set<ProgramPoint>> preDominanceFrontierMap = new HashMap<>();
   private static final Map<ProgramPoint, Branch> controlBranchMap = new HashMap<>();
+  private static final Map<ProgramPoint, Set<Branch>> controlDependenciesMap = new HashMap<>();
 
 
   private static final Map<ProgramPoint, Dominance> dominanceMap = new HashMap<>();
@@ -85,6 +86,10 @@ public class DataflowStateMap {
     return controlBranchMap;
   }
 
+  public static Map<ProgramPoint, Set<Branch>> getControlDependenciesMap() {
+    return controlDependenciesMap;
+  }
+
 
   public static Map<ProgramPoint, Dominance> getDominanceMap() {
     return dominanceMap;
@@ -120,6 +125,7 @@ public class DataflowStateMap {
     postDominanceFrontierMap.clear();
     preDominanceFrontierMap.clear();
     controlBranchMap.clear();
+    controlDependenciesMap.clear();
 
     dominanceMap.clear();
     reachingDefinitionsMap.clear();

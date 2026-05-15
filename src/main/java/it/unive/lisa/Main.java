@@ -26,6 +26,7 @@ import it.unive.lisa.analysis.avase.ImmediatePostDomination;
 import it.unive.lisa.analysis.avase.PreDominanceFrontier;
 import it.unive.lisa.analysis.avase.PostDominanceFrontier;
 import it.unive.lisa.analysis.avase.ControlBranch;
+import it.unive.lisa.analysis.avase.ControlDependencies;
 
 import it.unive.lisa.analysis.avase.AdvancedAbstractState;
 import it.unive.lisa.analysis.traces.TracePartitioning;
@@ -133,6 +134,10 @@ public class Main {
       System.out.println("> ControlBranch.computeAll(program) :: START");
       ControlBranch.computeAll(program);
       System.out.println("> ControlBranch.computeAll(program) :: END");
+
+      System.out.println("> ControlDependencies.computeAll(program) :: START");
+      ControlDependencies.computeAll(program);
+      System.out.println("> ControlDependencies.computeAll(program) :: END");
 
       // we build a new configuration for the analysis
       LiSAConfiguration conf = new DefaultConfiguration();

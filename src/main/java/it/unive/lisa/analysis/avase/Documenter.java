@@ -42,6 +42,7 @@ public class Documenter {
       dumpMapOfProgramPointToSetOfProgramPoints(dirPath, writer, "POF", DataflowStateMap.getPostDominanceFrontierMap());
       dumpMapOfProgramPointToSetOfProgramPoints(dirPath, writer, "PEF", DataflowStateMap.getPreDominanceFrontierMap());
       dumpMapOfProgramPointToBranch(dirPath, writer, "CB", DataflowStateMap.getControlBranchMap());
+      dumpMapOfProgramPointToSetOfBranches(dirPath, writer, "CD", DataflowStateMap.getControlDependenciesMap());
     }
   }
 
@@ -138,8 +139,7 @@ public class Documenter {
   public static void dumpMapOfProgramPointToSetOfProgramPoints(String dirPath, Writer writer, String ID, Map<ProgramPoint, Set<ProgramPoint>> map) throws IOException {
     writer.write("# " + ID + "\n");
     dumpMapOfProgramPointToSetOfProgramPointsAsTable(writer, ID, map);
-    if (ID.equals("POF"))
-      dumpMapOfProgramPointToSetOfProgramPointsAsGraph(dirPath, writer, ID, map);
+    dumpMapOfProgramPointToSetOfProgramPointsAsGraph(dirPath, writer, ID, map);
   }
 
   public static void dumpMapOfProgramPointToBranchAsGraph(String dirPath, Writer writer, String ID, Map<ProgramPoint, Branch> map) throws IOException {
@@ -192,6 +192,61 @@ public class Documenter {
     writer.write("# " + ID + "\n");
     dumpMapOfProgramPointToBranchAsTable(writer, ID, map);
     dumpMapOfProgramPointToBranchAsGraph(dirPath, writer, ID, map);
+  }
+
+  public static void dumpMapOfProgramPointToSetOfBranchesAsGraph(String dirPath, Writer writer, String ID, Map<ProgramPoint, Set<Branch>> map) throws IOException {
+    String d2File = dirPath + "/pp2setpp-" + ID + ".d2";
+    String pngFile = "pp2setpp-" + ID + ".png";
+    writer.write("![./" + pngFile + "](./" + pngFile + ")\n\n");
+    try (Writer writerD2 = new OutputStreamWriter(new FileOutputStream(d2File), StandardCharsets.UTF_8.newEncoder())) {
+      Map<ProgramPoint, String> labellingMap = DataflowStateMap.getLabellingMap();
+      Set<ProgramPoint> nodes = new HashSet<>();
+      for (ProgramPoint source : map.keySet()) {
+        if (!map.get(source).isEmpty()) {
+          nodes.add(source);
+        }
+        for (Branch sink : map.get(source)) {
+          nodes.add(sink.getCondition());
+        }
+      }
+
+      for (ProgramPoint node : nodes) {
+        writerD2.write(nodeId(labellingMap.get(node)) + " : \"" + nodeId(labellingMap.get(node)) + " | " + node + "\"\n");
+      }
+      for (ProgramPoint source : map.keySet()) {
+        for (Branch sink : map.get(source)) {
+          writerD2.write(nodeId(labellingMap.get(source)) + " -> " + nodeId(labellingMap.get(sink.getCondition())) + " : " + sink.getChoice() + "\n");
+        }
+      }
+    }
+    compileWithD2(d2File, dirPath + "/" + pngFile);
+  }
+
+  public static void dumpMapOfProgramPointToSetOfBranchesAsTable(Writer writer, String ID, Map<ProgramPoint, Set<Branch>> map) throws IOException {
+    Map<ProgramPoint, String> labellingMap = DataflowStateMap.getLabellingMap();
+    writer.write("|  N  | " + ID + " |\n");
+    writer.write("| --- | --- |\n");
+    for (ProgramPoint pp : map.keySet()) {
+      Set<Branch> state = map.get(pp);
+      writer.write("| " + nodeLabel(labellingMap.get(pp)) + " | $\\{");
+      boolean first = true;
+      for (Branch peer : state) {
+        if (first) {
+          first = false;
+        } else {
+          writer.write(", ");
+        }
+        writer.write("(" + nodeAtomLabel(labellingMap.get(peer.getCondition())) + ", " + peer.getChoice() + ")");
+      }
+      writer.write("\\}$ |\n");
+    }
+    writer.write("\n");
+  }
+
+  public static void dumpMapOfProgramPointToSetOfBranches(String dirPath, Writer writer, String ID, Map<ProgramPoint, Set<Branch>> map) throws IOException {
+    writer.write("# " + ID + "\n");
+    dumpMapOfProgramPointToSetOfBranchesAsTable(writer, ID, map);
+    dumpMapOfProgramPointToSetOfBranchesAsGraph(dirPath, writer, ID, map);
   }
 
   public static void compileWithD2(String input, String output) throws IOException {
