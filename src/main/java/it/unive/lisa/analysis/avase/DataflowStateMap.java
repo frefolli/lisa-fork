@@ -30,6 +30,7 @@ public class DataflowStateMap {
   private static final Map<ProgramPoint, AvailableDefinitions> availableDefinitionsMap = new HashMap<>();
   private static final Map<ProgramPoint, ReachingDefinitions> reachingDefinitionsMap = new HashMap<>();
   private static final Map<ProgramPoint, KilledDefinitions> killedDefinitionsMap = new HashMap<>();
+  private static final Map<ProgramPoint, EmergingDefinitions> emergingDefinitionsMap = new HashMap<>();
 
   public static Map<CFG, Set<ProgramPoint>> getCFGMap() {
     return cfgMap;
@@ -99,6 +100,10 @@ public class DataflowStateMap {
     return killedDefinitionsMap;
   }
 
+  public static Map<ProgramPoint, EmergingDefinitions> getEmergingDefinitionsMap() {
+    return emergingDefinitionsMap;
+  }
+
   public static void clear() {
     cfgMap.clear();
     labellingMap.clear();
@@ -117,5 +122,6 @@ public class DataflowStateMap {
     reachingDefinitionsMap.clear();
     availableDefinitionsMap.clear();
     killedDefinitionsMap.clear();
+    emergingDefinitionsMap.clear();
   }
 }

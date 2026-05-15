@@ -47,6 +47,7 @@ public class Documenter {
       dumpMapOfProgramPointToSetLatticeOfDefinitions(dirPath, writer, "RD", DataflowStateMap.getReachingDefinitionsMap());
       dumpMapOfProgramPointToSetLatticeOfDefinitions(dirPath, writer, "KD", DataflowStateMap.getKilledDefinitionsMap());
       dumpMapOfProgramPointToSetLatticeOfDefinitions(dirPath, writer, "AD", DataflowStateMap.getAvailableDefinitionsMap());
+      dumpMapOfProgramPointToSetLatticeOfDefinitions(dirPath, writer, "ED", DataflowStateMap.getEmergingDefinitionsMap());
     }
   }
 

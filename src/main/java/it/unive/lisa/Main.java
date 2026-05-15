@@ -27,6 +27,7 @@ import it.unive.lisa.analysis.avase.ControlDependencies;
 import it.unive.lisa.analysis.avase.Speculator;
 import it.unive.lisa.analysis.avase.ReachingDefinitions;
 import it.unive.lisa.analysis.avase.KilledDefinitions;
+import it.unive.lisa.analysis.avase.EmergingDefinitions;
 import it.unive.lisa.analysis.avase.AvailableDefinitions;
 
 import it.unive.lisa.analysis.avase.AdvancedAbstractState;
@@ -155,6 +156,8 @@ public class Main {
       speculatorsOrder.add("KD");
       speculators.put("AD", new AvailableDefinitions());
       speculatorsOrder.add("AD");
+      speculators.put("ED", new EmergingDefinitions());
+      speculatorsOrder.add("ED");
 
       // we specify the analysis that we want to execute
       conf.abstractState = AdvancedAbstractState.make(
