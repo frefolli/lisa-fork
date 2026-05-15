@@ -12,6 +12,7 @@ import java.io.IOException;
 import it.unive.lisa.program.cfg.CFG;
 import it.unive.lisa.program.cfg.edge.Edge;
 import it.unive.lisa.program.cfg.statement.Statement;
+import it.unive.lisa.analysis.lattices.SetLattice;
 
 public class Documenter {
   public static String nodeLabel(String ID) {
@@ -43,6 +44,9 @@ public class Documenter {
       dumpMapOfProgramPointToSetOfProgramPoints(dirPath, writer, "PEF", DataflowStateMap.getPreDominanceFrontierMap());
       dumpMapOfProgramPointToBranch(dirPath, writer, "CB", DataflowStateMap.getControlBranchMap());
       dumpMapOfProgramPointToSetOfBranches(dirPath, writer, "CD", DataflowStateMap.getControlDependenciesMap());
+      dumpMapOfProgramPointToSetLatticeOfDefinitions(dirPath, writer, "RD", DataflowStateMap.getReachingDefinitionsMap());
+      dumpMapOfProgramPointToSetLatticeOfDefinitions(dirPath, writer, "KD", DataflowStateMap.getKilledDefinitionsMap());
+      dumpMapOfProgramPointToSetLatticeOfDefinitions(dirPath, writer, "AD", DataflowStateMap.getAvailableDefinitionsMap());
     }
   }
 
@@ -154,7 +158,7 @@ public class Documenter {
         Branch sink = map.get(source);
         if (!sink.isBottom()) {
           nodes.add(source);
-          nodes.add(sink.getCondition());
+          nodes.add(sink.condition);
         }
       }
 
@@ -164,7 +168,7 @@ public class Documenter {
       for (ProgramPoint source : map.keySet()) {
         Branch sink = map.get(source);
         if (!sink.isBottom()) {
-          writerD2.write(nodeId(labellingMap.get(source)) + " -> " + nodeId(labellingMap.get(sink.getCondition())) + " : " + sink.getChoice() + "\n");
+          writerD2.write(nodeId(labellingMap.get(source)) + " -> " + nodeId(labellingMap.get(sink.condition)) + " : " + sink.choice + "\n");
         }
       }
     }
@@ -181,7 +185,7 @@ public class Documenter {
       if (state.isBottom()) {
         writer.write("$\\bot$");
       } else {
-        writer.write(nodeAtomLabel("$(" + nodeAtomLabel(labellingMap.get(state.getCondition())) + ", " + state.getChoice() + ")$"));
+        writer.write(nodeAtomLabel("$(" + nodeAtomLabel(labellingMap.get(state.condition)) + ", " + state.choice + ")$"));
       }
       writer.write(" |\n");
     }
@@ -206,7 +210,7 @@ public class Documenter {
           nodes.add(source);
         }
         for (Branch sink : map.get(source)) {
-          nodes.add(sink.getCondition());
+          nodes.add(sink.condition);
         }
       }
 
@@ -215,7 +219,7 @@ public class Documenter {
       }
       for (ProgramPoint source : map.keySet()) {
         for (Branch sink : map.get(source)) {
-          writerD2.write(nodeId(labellingMap.get(source)) + " -> " + nodeId(labellingMap.get(sink.getCondition())) + " : " + sink.getChoice() + "\n");
+          writerD2.write(nodeId(labellingMap.get(source)) + " -> " + nodeId(labellingMap.get(sink.condition)) + " : " + sink.choice + "\n");
         }
       }
     }
@@ -236,7 +240,7 @@ public class Documenter {
         } else {
           writer.write(", ");
         }
-        writer.write("(" + nodeAtomLabel(labellingMap.get(peer.getCondition())) + ", " + peer.getChoice() + ")");
+        writer.write("(" + nodeAtomLabel(labellingMap.get(peer.condition)) + ", " + peer.choice + ")");
       }
       writer.write("\\}$ |\n");
     }
@@ -247,6 +251,32 @@ public class Documenter {
     writer.write("# " + ID + "\n");
     dumpMapOfProgramPointToSetOfBranchesAsTable(writer, ID, map);
     dumpMapOfProgramPointToSetOfBranchesAsGraph(dirPath, writer, ID, map);
+  }
+
+  public static void dumpMapOfProgramPointToSetLatticeOfDefinitionsAsTable(Writer writer, String ID, Map<ProgramPoint, ? extends SetLattice<?, Definition>> map) throws IOException {
+    Map<ProgramPoint, String> labellingMap = DataflowStateMap.getLabellingMap();
+    writer.write("|  N  | " + ID + " |\n");
+    writer.write("| --- | --- |\n");
+    for (ProgramPoint pp : map.keySet()) {
+      Set<Definition> state = map.get(pp).elements;
+      writer.write("| " + nodeLabel(labellingMap.get(pp)) + " | $\\{");
+      boolean first = true;
+      for (Definition peer : state) {
+        if (first) {
+          first = false;
+        } else {
+          writer.write(", ");
+        }
+        writer.write("(" + nodeAtomLabel(labellingMap.get(peer.programPoint)) + ", " + peer.variable + ")");
+      }
+      writer.write("\\}$ |\n");
+    }
+    writer.write("\n");
+  }
+
+  public static void dumpMapOfProgramPointToSetLatticeOfDefinitions(String dirPath, Writer writer, String ID, Map<ProgramPoint, ? extends SetLattice<?, Definition>> map) throws IOException {
+    writer.write("# " + ID + "\n");
+    dumpMapOfProgramPointToSetLatticeOfDefinitionsAsTable(writer, ID, map);
   }
 
   public static void compileWithD2(String input, String output) throws IOException {

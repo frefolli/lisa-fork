@@ -9,10 +9,6 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 
-import it.unive.lisa.analysis.avase.Speculator;
-import it.unive.lisa.analysis.avase.Dominance;
-import it.unive.lisa.analysis.avase.ReachingDefinitions;
-import it.unive.lisa.analysis.avase.KilledDefinitions;
 
 import it.unive.lisa.analysis.avase.ProgramInspector;
 import it.unive.lisa.analysis.avase.PreDominators;
@@ -28,8 +24,12 @@ import it.unive.lisa.analysis.avase.PostDominanceFrontier;
 import it.unive.lisa.analysis.avase.ControlBranch;
 import it.unive.lisa.analysis.avase.ControlDependencies;
 
+import it.unive.lisa.analysis.avase.Speculator;
+import it.unive.lisa.analysis.avase.ReachingDefinitions;
+import it.unive.lisa.analysis.avase.KilledDefinitions;
+import it.unive.lisa.analysis.avase.AvailableDefinitions;
+
 import it.unive.lisa.analysis.avase.AdvancedAbstractState;
-import it.unive.lisa.analysis.traces.TracePartitioning;
 import it.unive.lisa.conf.LiSAConfiguration;
 import it.unive.lisa.conf.LiSAConfiguration.GraphType;
 import it.unive.lisa.imp.IMPFrontend;
@@ -148,20 +148,13 @@ public class Main {
 
       Map<String, Speculator> speculators = new HashMap<>();
       List<String> speculatorsOrder = new ArrayList<>();
-      // speculators.put(String.of("IPOD"), new ImmediatePostDominators());
-      // speculators.put(String.of("rPOD"), new PostDomination());
-      // speculators.put(String.of("rIPOD"), new ImmediatePostDomination());
 
-      if (cliArgs.withReachingDefinitions()) {
-        String key = "RD";
-        speculators.put(key, new ReachingDefinitions());
-        speculatorsOrder.add(key);
-      }
-      if (cliArgs.withKilledDefinitions()) {
-        String key = "KD";
-        speculators.put(key, new KilledDefinitions());
-        speculatorsOrder.add(key);
-      }
+      speculators.put("RD", new ReachingDefinitions());
+      speculatorsOrder.add("RD");
+      speculators.put("KD", new KilledDefinitions());
+      speculatorsOrder.add("KD");
+      speculators.put("AD", new AvailableDefinitions());
+      speculatorsOrder.add("AD");
 
       // we specify the analysis that we want to execute
       conf.abstractState = AdvancedAbstractState.make(

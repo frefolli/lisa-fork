@@ -13,8 +13,8 @@ import it.unive.lisa.util.representation.StructuredObject;
  */
 public class Branch
 		implements StructuredObject {
-  private final ProgramPoint condition;
-  private final Boolean choice;
+  public final ProgramPoint condition;
+  public final Boolean choice;
 
 	public Branch() {
 		this(null, null);
@@ -27,14 +27,6 @@ public class Branch
     this.condition = condition;
     this.choice = choice;
 	}
-
-  public ProgramPoint getCondition() {
-    return condition;
-  }
-
-  public Boolean getChoice() {
-    return choice;
-  }
 
   public boolean isBottom() {
     return condition == null && choice == null;

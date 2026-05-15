@@ -50,7 +50,7 @@ public class ControlDependencies extends ProgramVisitor {
       for (Edge edge : cfg.getOutgoingEdges((Statement)d)) {
         ProgramPoint s = edge.getDestination();
         if (POD.get(s).contains(n)) {
-          state.add(new Branch(d, CB.get(s).getChoice()));
+          state.add(new Branch(d, CB.get(s).choice));
         }
       }
     }

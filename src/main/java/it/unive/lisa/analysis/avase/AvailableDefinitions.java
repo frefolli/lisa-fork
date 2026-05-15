@@ -25,20 +25,20 @@ import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.analysis.lattices.SetLattice;
 
-public class KilledDefinitions extends SetLattice<KilledDefinitions, Definition>
-  implements Speculator<KilledDefinitions> {
-	public KilledDefinitions(Set<Definition> elements, boolean isTop) {
+public class AvailableDefinitions extends SetLattice<AvailableDefinitions, Definition>
+  implements Speculator<AvailableDefinitions> {
+	public AvailableDefinitions(Set<Definition> elements, boolean isTop) {
 		super(elements, isTop);
 	}
 
 	/**
 	 * Builds the empty set lattice element.
 	 */
-	public KilledDefinitions() {
+	public AvailableDefinitions() {
 		this(Collections.emptySet(), false);
 	}
 
-	private KilledDefinitions(
+	private AvailableDefinitions(
 			boolean isTop) {
 		this(Collections.emptySet(), isTop);
 	}
@@ -48,7 +48,7 @@ public class KilledDefinitions extends SetLattice<KilledDefinitions, Definition>
 	 * 
 	 * @param exp the expression
 	 */
-	public KilledDefinitions(
+	public AvailableDefinitions(
 			Definition exp) {
 		this(Collections.singleton(exp), false);
 	}
@@ -58,23 +58,23 @@ public class KilledDefinitions extends SetLattice<KilledDefinitions, Definition>
 	 * 
 	 * @param set the set of expression
 	 */
-	public KilledDefinitions(
+	public AvailableDefinitions(
 			Set<Definition> set) {
 		this(Collections.unmodifiableSet(set), false);
 	}
 	@Override
-	public KilledDefinitions mk(Set<Definition> set) {
-		return new KilledDefinitions(set);
+	public AvailableDefinitions mk(Set<Definition> set) {
+		return new AvailableDefinitions(set);
 	}
 	
 	@Override
-	public KilledDefinitions top() {
-		return new KilledDefinitions(true);
+	public AvailableDefinitions top() {
+		return new AvailableDefinitions(true);
 	}
 
 	@Override
-	public KilledDefinitions bottom() {
-		return new KilledDefinitions();
+	public AvailableDefinitions bottom() {
+		return new AvailableDefinitions();
 	}
 
 	public boolean shouldConsiderProgramPoint(ProgramPoint pp) {
@@ -97,26 +97,41 @@ public class KilledDefinitions extends SetLattice<KilledDefinitions, Definition>
     }
   }
 
+	public KilledDefinitions getKilledDefinitions(ProgramPoint pp) {
+    Map<ProgramPoint, KilledDefinitions> function = DataflowStateMap.getKilledDefinitionsMap();
+    assert(function != null);
+    if (!function.containsKey(pp)) {
+      return new KilledDefinitions();
+    } else {
+      return function.get(pp);
+    }
+  }
+
   /* SPECULATOR */
 
   @Override
-	public KilledDefinitions normalStep(ProgramPoint pp) throws SemanticException {
+	public AvailableDefinitions normalStep(ProgramPoint pp) throws SemanticException {
+		if (shouldConsiderProgramPoint(pp)) {
+      Set<Definition> reachingDefinitions = new HashSet<>(getReachingDefinitions(pp).elements);
+      Set<Definition> killedDefinitions = getKilledDefinitions(pp).elements;
+      reachingDefinitions.removeAll(killedDefinitions);
+      AvailableDefinitions state = new AvailableDefinitions(reachingDefinitions);
+      Map<ProgramPoint, AvailableDefinitions> function = DataflowStateMap.getAvailableDefinitionsMap();
+			function.put(pp, state);
+      return state;
+		}
 		return mk(elements);
   }
 
   @Override
-	public KilledDefinitions assignStep(ProgramPoint pp, Identifier id, SymbolicExpression expr) throws SemanticException {
+	public AvailableDefinitions assignStep(ProgramPoint pp, Identifier id, SymbolicExpression expr) throws SemanticException {
 		if (shouldConsiderProgramPoint(pp)) {
-      ReachingDefinitions precedents = getReachingDefinitions(pp);
-      Set<Definition> filtered = new HashSet<>();
-      for (Definition d : precedents.elements) {
-        if (d.variable.equals(id)) {
-          filtered.add(d);
-        } else {
-        }
-      }
-      KilledDefinitions state = new KilledDefinitions(filtered);
-      Map<ProgramPoint, KilledDefinitions> function = DataflowStateMap.getKilledDefinitionsMap();
+      Set<Definition> reachingDefinitions = new HashSet<>(getReachingDefinitions(pp).elements);
+      Set<Definition> killedDefinitions = getKilledDefinitions(pp).elements;
+      reachingDefinitions.removeAll(killedDefinitions);
+      AvailableDefinitions state = new AvailableDefinitions(reachingDefinitions);
+      state = state.lub(new AvailableDefinitions(new Definition(id, pp)));
+      Map<ProgramPoint, AvailableDefinitions> function = DataflowStateMap.getAvailableDefinitionsMap();
 			function.put(pp, state);
       return state;
     }
@@ -124,36 +139,27 @@ public class KilledDefinitions extends SetLattice<KilledDefinitions, Definition>
   }
 
   @Override
-	public KilledDefinitions controlStep(ProgramPoint src, ProgramPoint dest) throws SemanticException {
+	public AvailableDefinitions controlStep(ProgramPoint src, ProgramPoint dest) throws SemanticException {
     return mk(elements);
   }
 
 	@Override
-	public KilledDefinitions pushScope(
+	public AvailableDefinitions pushScope(
 			ScopeToken scope)
 			throws SemanticException {
 		return mk(elements);
-		// return new KilledDefinitions((Identifier) variable.pushScope(scope), programPoint);
 	}
 
 	@Override
-	public KilledDefinitions popScope(
+	public AvailableDefinitions popScope(
 			ScopeToken scope)
 			throws SemanticException {
-		// if (!variable.canBeScoped())
-		// 	return this;
-
-		// SymbolicExpression popped = variable.popScope(scope);
-		// if (popped == null)
-		// 	return null;
-
-		// return new KilledDefinitions((Identifier) popped, programPoint);
 		return mk(elements);
 	}
 
 	/* FUNCTIONAL LATTICE */
 
-	public KilledDefinitions stateOfUnknown(ProgramPoint key) {
+	public AvailableDefinitions stateOfUnknown(ProgramPoint key) {
 		return this.isBottom() ? this.bottom() : this.top();
 	}
 }

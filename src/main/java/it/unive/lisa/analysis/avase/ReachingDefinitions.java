@@ -87,35 +87,28 @@ public class ReachingDefinitions extends SetLattice<ReachingDefinitions, Definit
 		return false;
 	}
 
-	public ReachingDefinitions initializeState(ProgramPoint pp) {
-		assert shouldConsiderProgramPoint(pp);
-		return new ReachingDefinitions();
-	}
-
-	public ReachingDefinitions getPrecedentState(ProgramPoint pp) {
-    Map<ProgramPoint, ReachingDefinitions> function = DataflowStateMap.getReachingDefinitionsMap();
+	public AvailableDefinitions getAvailableDefinitions(ProgramPoint pp) {
+    Map<ProgramPoint, AvailableDefinitions> function = DataflowStateMap.getAvailableDefinitionsMap();
     assert(function != null);
     if (!function.containsKey(pp)) {
-      return initializeState(pp);
+      return new AvailableDefinitions();
     } else {
       return function.get(pp);
     }
   }
 
-	public ReachingDefinitions joinPrecedentStates(ProgramPoint pp) throws SemanticException {
-    ReachingDefinitions state = this.bottom();
+	public ReachingDefinitions joinAvailableDefinitions(ProgramPoint pp) throws SemanticException {
+    Set<Definition> definitions = new HashSet<>();
     for (Edge edge : pp.getCFG().getIngoingEdges((Statement)pp)) {
       ProgramPoint source = edge.getSource();
       if (shouldConsiderProgramPoint(source)) {
-        ReachingDefinitions prev = getPrecedentState(source);
-        if (state.isBottom()) {
-          state = prev;
-        } else {
-          state = state.lub(prev);
+        AvailableDefinitions prev = getAvailableDefinitions(source);
+        for (Definition definition : prev.elements) {
+          definitions.add(definition);
         }
       }
     }
-    return state;
+    return new ReachingDefinitions(definitions);
   }
 
   /* SPECULATOR */
@@ -123,9 +116,10 @@ public class ReachingDefinitions extends SetLattice<ReachingDefinitions, Definit
   @Override
 	public ReachingDefinitions normalStep(ProgramPoint pp) throws SemanticException {
 		if (shouldConsiderProgramPoint(pp)) {
-      ReachingDefinitions state = joinPrecedentStates(pp);
+      ReachingDefinitions state = joinAvailableDefinitions(pp);
       Map<ProgramPoint, ReachingDefinitions> function = DataflowStateMap.getReachingDefinitionsMap();
 			function.put(pp, state);
+      return state;
 		}
 		return mk(elements);
   }
@@ -133,15 +127,7 @@ public class ReachingDefinitions extends SetLattice<ReachingDefinitions, Definit
   @Override
 	public ReachingDefinitions assignStep(ProgramPoint pp, Identifier id, SymbolicExpression expr) throws SemanticException {
 		if (shouldConsiderProgramPoint(pp)) {
-      ReachingDefinitions state = joinPrecedentStates(pp);
-      Set<Definition> filtered = new HashSet<>();
-      for (Definition d : state.elements) {
-        if (!d.variable.equals(id)) {
-          filtered.add(d);
-        }
-      }
-      state = new ReachingDefinitions(filtered);
-      state = state.lub(new ReachingDefinitions(new Definition(id, pp)));
+      ReachingDefinitions state = joinAvailableDefinitions(pp);
       Map<ProgramPoint, ReachingDefinitions> function = DataflowStateMap.getReachingDefinitionsMap();
 			function.put(pp, state);
       return state;
@@ -159,21 +145,12 @@ public class ReachingDefinitions extends SetLattice<ReachingDefinitions, Definit
 			ScopeToken scope)
 			throws SemanticException {
 		return mk(elements);
-		// return new ReachingDefinitions((Identifier) variable.pushScope(scope), programPoint);
 	}
 
 	@Override
 	public ReachingDefinitions popScope(
 			ScopeToken scope)
 			throws SemanticException {
-		// if (!variable.canBeScoped())
-		// 	return this;
-
-		// SymbolicExpression popped = variable.popScope(scope);
-		// if (popped == null)
-		// 	return null;
-
-		// return new ReachingDefinitions((Identifier) popped, programPoint);
 		return mk(elements);
 	}
 
