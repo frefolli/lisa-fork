@@ -26,21 +26,16 @@ public class PostDominators extends ProgramVisitor {
 
   public void initializeStates(CFG cfg) {
     Map<ProgramPoint, Set<ProgramPoint>> function = DataflowStateMap.getPostDominatorsMap();
-    for (ProgramPoint pp : cfg.getNodes()) {
-      boolean is_statement = (pp instanceof Statement);
-      if (is_statement) {
-        boolean has_outgoing_edges = !cfg.getOutgoingEdges((Statement)pp).isEmpty();
-        boolean is_exitpoint = cfg.getNormalExitpoints().contains(pp);
-        if (has_outgoing_edges || is_exitpoint) {
-          Set<ProgramPoint> state = new HashSet<ProgramPoint>();
-          if (!is_exitpoint) {
-            for (ProgramPoint p : cfg.getNodes()) {
-              state.add(p);
-            }
-          }
-          function.put(pp, state);
+    Set<ProgramPoint> nodes = DataflowStateMap.getCFGMap().get(cfg);
+    for (ProgramPoint pp : nodes) {
+      boolean is_exitpoint = cfg.getNormalExitpoints().contains(pp);
+      Set<ProgramPoint> state = new HashSet<ProgramPoint>();
+      if (!is_exitpoint) {
+        for (ProgramPoint p : cfg.getNodes()) {
+          state.add(p);
         }
       }
+      function.put(pp, state);
     }
   }
 
@@ -48,10 +43,11 @@ public class PostDominators extends ProgramVisitor {
     initializeStates(cfg);
 
     Map<ProgramPoint, Set<ProgramPoint>> function = DataflowStateMap.getPostDominatorsMap();
+    Set<ProgramPoint> nodes = DataflowStateMap.getCFGMap().get(cfg);
     boolean changed = true;
     while (changed) {
       changed = false;
-      for (ProgramPoint pp : function.keySet()) {
+      for (ProgramPoint pp : nodes) {
         Set<ProgramPoint> old_state = function.get(pp);
         Set<ProgramPoint> new_state = compute(cfg, pp);
         if (!old_state.equals(new_state)) {

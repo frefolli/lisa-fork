@@ -25,28 +25,23 @@ public class PreDominanceFrontier extends ProgramVisitor {
   }
 
   public void initializeStates(CFG cfg) {
+    Set<ProgramPoint> nodes = DataflowStateMap.getCFGMap().get(cfg);
     Map<ProgramPoint, Set<ProgramPoint>> function = DataflowStateMap.getPreDominanceFrontierMap();
-    for (ProgramPoint pp : cfg.getNodes()) {
-      boolean is_statement = (pp instanceof Statement);
-      if (is_statement) {
-        boolean has_outgoing_edges = !cfg.getOutgoingEdges((Statement)pp).isEmpty();
-        boolean is_exitpoint = cfg.getNormalExitpoints().contains(pp);
-        if (has_outgoing_edges || is_exitpoint) {
-          Set<ProgramPoint> state = new HashSet<ProgramPoint>();
-          function.put(pp, state);
-        }
-      }
+    for (ProgramPoint pp : nodes) {
+      Set<ProgramPoint> state = new HashSet<ProgramPoint>();
+      function.put(pp, state);
     }
   }
 
   public void visitCFG(CFG cfg) {
     initializeStates(cfg);
 
+    Set<ProgramPoint> nodes = DataflowStateMap.getCFGMap().get(cfg);
     Map<ProgramPoint, Set<ProgramPoint>> function = DataflowStateMap.getPreDominanceFrontierMap();
     boolean changed = true;
     while (changed) {
       changed = false;
-      for (ProgramPoint pp : function.keySet()) {
+      for (ProgramPoint pp : nodes) {
         Set<ProgramPoint> old_state = function.get(pp);
         Set<ProgramPoint> new_state = compute(cfg, pp);
         if (!old_state.equals(new_state)) {

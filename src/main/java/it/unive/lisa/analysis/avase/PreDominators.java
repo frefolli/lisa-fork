@@ -24,21 +24,17 @@ public class PreDominators extends ProgramVisitor {
 
   public void initializeStates(CFG cfg) {
     Map<ProgramPoint, Set<ProgramPoint>> function = DataflowStateMap.getPreDominatorsMap();
-    for (ProgramPoint pp : cfg.getNodes()) {
-      boolean is_statement = (pp instanceof Statement);
-      if (is_statement) {
-        boolean has_outgoing_edges = !cfg.getIngoingEdges((Statement)pp).isEmpty();
-        boolean is_entrypoint = cfg.getEntrypoints().contains(pp);
-        if (has_outgoing_edges || is_entrypoint) {
-          Set<ProgramPoint> state = new HashSet<ProgramPoint>();
-          if (!is_entrypoint) {
-            for (ProgramPoint p : cfg.getNodes()) {
-              state.add(p);
-            }
-          }
-          function.put(pp, state);
+    Set<ProgramPoint> nodes = DataflowStateMap.getCFGMap().get(cfg);
+    for (ProgramPoint pp : nodes) {
+      boolean is_entrypoint = cfg.getEntrypoints().contains(pp);
+      Set<ProgramPoint> state = new HashSet<ProgramPoint>();
+      if (!is_entrypoint) {
+        for (ProgramPoint p : cfg.getNodes()) {
+          state.add(p);
         }
       }
+      System.out.println("DEBUG: Set PED[" + pp + "] = " + state);
+      function.put(pp, state);
     }
   }
 
@@ -46,15 +42,17 @@ public class PreDominators extends ProgramVisitor {
     initializeStates(cfg);
 
     Map<ProgramPoint, Set<ProgramPoint>> function = DataflowStateMap.getPreDominatorsMap();
+    Set<ProgramPoint> nodes = DataflowStateMap.getCFGMap().get(cfg);
     boolean changed = true;
     while (changed) {
       changed = false;
-      for (ProgramPoint pp : function.keySet()) {
+      for (ProgramPoint pp : nodes) {
         Set<ProgramPoint> old_state = function.get(pp);
         Set<ProgramPoint> new_state = compute(cfg, pp);
         if (!old_state.equals(new_state)) {
           changed = true;
           function.put(pp, new_state);
+          System.out.println("Changed " + pp + " was " + old_state + " now is " + new_state);
         }
       }
     }
@@ -66,6 +64,9 @@ public class PreDominators extends ProgramVisitor {
     for (Edge edge : cfg.getIngoingEdges((Statement)pp)) {
       ProgramPoint peer = edge.getSource();
       Set<ProgramPoint> peer_state = function.get(peer);
+      if (peer_state == null) {
+        System.out.println("WARN: PED[" + peer + "] = NULL");
+      }
       if (state == null) {
         state = new HashSet(peer_state);
       } else {

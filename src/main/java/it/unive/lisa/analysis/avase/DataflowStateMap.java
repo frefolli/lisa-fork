@@ -1,6 +1,7 @@
 package it.unive.lisa.analysis.avase;
 
 import it.unive.lisa.program.cfg.ProgramPoint;
+import it.unive.lisa.program.cfg.CFG;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -11,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 
 public class DataflowStateMap {
-  private static final Map<String, Set<ProgramPoint>> cfgMap = new HashMap<>();
+  private static final Map<CFG, Set<ProgramPoint>> cfgMap = new HashMap<>();
   private static final Map<ProgramPoint, String> labellingMap = new HashMap<>();
   private static final Map<ProgramPoint, Set<ProgramPoint>> postDominatorsMap = new HashMap<>();
   private static final Map<ProgramPoint, Set<ProgramPoint>> preDominatorsMap = new HashMap<>();
@@ -23,6 +24,7 @@ public class DataflowStateMap {
   private static final Map<ProgramPoint, Set<ProgramPoint>> immediatePreDominationMap = new HashMap<>();
   private static final Map<ProgramPoint, Set<ProgramPoint>> postDominanceFrontierMap = new HashMap<>();
   private static final Map<ProgramPoint, Set<ProgramPoint>> preDominanceFrontierMap = new HashMap<>();
+  private static final Map<ProgramPoint, Branch> controlBranchMap = new HashMap<>();
 
 
   private static final Map<ProgramPoint, Dominance> dominanceMap = new HashMap<>();
@@ -31,7 +33,7 @@ public class DataflowStateMap {
   private static final Map<ProgramPoint, PathConditions> pathConditionsMap = new HashMap<>();
   private static final Map<ProgramPoint, ControlConditions> controlConditionsMap = new HashMap<>();
 
-  public static Map<String, Set<ProgramPoint>> getCFGMap() {
+  public static Map<CFG, Set<ProgramPoint>> getCFGMap() {
     return cfgMap;
   }
 
@@ -79,6 +81,9 @@ public class DataflowStateMap {
     return preDominanceFrontierMap;
   }
 
+  public static Map<ProgramPoint, Branch> getControlBranchMap() {
+    return controlBranchMap;
+  }
 
 
   public static Map<ProgramPoint, Dominance> getDominanceMap() {
@@ -114,6 +119,7 @@ public class DataflowStateMap {
     immediatePreDominationMap.clear();
     postDominanceFrontierMap.clear();
     preDominanceFrontierMap.clear();
+    controlBranchMap.clear();
 
     dominanceMap.clear();
     reachingDefinitionsMap.clear();

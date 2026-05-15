@@ -24,8 +24,8 @@ public class PostDomination extends ProgramVisitor {
 
   public void initializeStates(CFG cfg) {
     Map<ProgramPoint, Set<ProgramPoint>> function = DataflowStateMap.getPostDominationMap();
-    Map<ProgramPoint, Set<ProgramPoint>> POD = DataflowStateMap.getPostDominatorsMap();
-    for (ProgramPoint pp : POD.keySet()) {
+    Set<ProgramPoint> nodes = DataflowStateMap.getCFGMap().get(cfg);
+    for (ProgramPoint pp : nodes) {
       function.put(pp, new HashSet<>());
     }
   }
@@ -33,9 +33,10 @@ public class PostDomination extends ProgramVisitor {
   public void visitCFG(CFG cfg) {
     initializeStates(cfg);
 
+    Set<ProgramPoint> nodes = DataflowStateMap.getCFGMap().get(cfg);
     Map<ProgramPoint, Set<ProgramPoint>> function = DataflowStateMap.getPostDominationMap();
     Map<ProgramPoint, Set<ProgramPoint>> POD = DataflowStateMap.getPostDominatorsMap();
-    for (ProgramPoint pp : function.keySet()) {
+    for (ProgramPoint pp : nodes) {
       for (ProgramPoint peer : POD.get(pp)) {
         function.get(peer).add(pp);
       }

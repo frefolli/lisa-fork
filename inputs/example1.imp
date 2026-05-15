@@ -9,5 +9,10 @@ class Example {
     } else {
       w = 2;
     }
+    if (w < 10) {
+      w = 11;
+    }
+    z = w + x;
+    return z * w;
   }
 }

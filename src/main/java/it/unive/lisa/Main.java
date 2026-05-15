@@ -25,6 +25,7 @@ import it.unive.lisa.analysis.avase.ImmediatePreDomination;
 import it.unive.lisa.analysis.avase.ImmediatePostDomination;
 import it.unive.lisa.analysis.avase.PreDominanceFrontier;
 import it.unive.lisa.analysis.avase.PostDominanceFrontier;
+import it.unive.lisa.analysis.avase.ControlBranch;
 
 import it.unive.lisa.analysis.avase.AdvancedAbstractState;
 import it.unive.lisa.analysis.traces.TracePartitioning;
@@ -81,19 +82,57 @@ public class Main {
       cleanOutputDirectoryIfDirty(outputPath);
 
       // we parse the program to get the CFG representation of the code in it
+      System.out.println("> IMPFrontend.processFile(inputPath) :: START");
       Program program = IMPFrontend.processFile(inputPath);
+      System.out.println("> IMPFrontend.processFile(inputPath) :: START");
       
+      System.out.println("> ProgramInspector.computeAll(program) :: START");
       ProgramInspector.computeAll(program);
+      System.out.println("> ProgramInspector.computeAll(program) :: END");
+
+      System.out.println("> PreDominators.computeAll(program) :: START");
       PreDominators.computeAll(program);
+      System.out.println("> PreDominators.computeAll(program) :: END");
+
+      System.out.println("> PostDominators.computeAll(program) :: START");
       PostDominators.computeAll(program);
+      System.out.println("> PostDominators.computeAll(program) :: END");
+
+      System.out.println("> ImmediatePreDominators.computeAll(program) :: START");
       ImmediatePreDominators.computeAll(program);
+      System.out.println("> ImmediatePreDominators.computeAll(program) :: END");
+
+      System.out.println("> ImmediatePostDominators.computeAll(program) :: START");
       ImmediatePostDominators.computeAll(program);
+      System.out.println("> ImmediatePostDominators.computeAll(program) :: END");
+
+      System.out.println("> PreDomination.computeAll(program) :: START");
       PreDomination.computeAll(program);
+      System.out.println("> PreDomination.computeAll(program) :: END");
+
+      System.out.println("> PostDomination.computeAll(program) :: START");
       PostDomination.computeAll(program);
+      System.out.println("> PostDomination.computeAll(program) :: END");
+
+      System.out.println("> ImmediatePreDomination.computeAll(program) :: START");
       ImmediatePreDomination.computeAll(program);
+      System.out.println("> ImmediatePreDomination.computeAll(program) :: END");
+
+      System.out.println("> ImmediatePostDomination.computeAll(program) :: START");
       ImmediatePostDomination.computeAll(program);
+      System.out.println("> ImmediatePostDomination.computeAll(program) :: END");
+
+      System.out.println("> PreDominanceFrontier.computeAll(program) :: START");
       PreDominanceFrontier.computeAll(program);
+      System.out.println("> PreDominanceFrontier.computeAll(program) :: END");
+
+      System.out.println("> PostDominanceFrontier.computeAll(program) :: START");
       PostDominanceFrontier.computeAll(program);
+      System.out.println("> PostDominanceFrontier.computeAll(program) :: END");
+
+      System.out.println("> ControlBranch.computeAll(program) :: START");
+      ControlBranch.computeAll(program);
+      System.out.println("> ControlBranch.computeAll(program) :: END");
 
       // we build a new configuration for the analysis
       LiSAConfiguration conf = new DefaultConfiguration();

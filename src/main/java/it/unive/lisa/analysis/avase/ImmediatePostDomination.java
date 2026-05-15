@@ -24,8 +24,8 @@ public class ImmediatePostDomination extends ProgramVisitor {
 
   public void initializeStates(CFG cfg) {
     Map<ProgramPoint, Set<ProgramPoint>> function = DataflowStateMap.getImmediatePostDominationMap();
-    Map<ProgramPoint, Set<ProgramPoint>> IPOD = DataflowStateMap.getImmediatePostDominatorsMap();
-    for (ProgramPoint pp : IPOD.keySet()) {
+    Set<ProgramPoint> nodes = DataflowStateMap.getCFGMap().get(cfg);
+    for (ProgramPoint pp : nodes) {
       function.put(pp, new HashSet<>());
     }
   }
@@ -35,7 +35,8 @@ public class ImmediatePostDomination extends ProgramVisitor {
 
     Map<ProgramPoint, Set<ProgramPoint>> function = DataflowStateMap.getImmediatePostDominationMap();
     Map<ProgramPoint, Set<ProgramPoint>> IPOD = DataflowStateMap.getImmediatePostDominatorsMap();
-    for (ProgramPoint pp : function.keySet()) {
+    Set<ProgramPoint> nodes = DataflowStateMap.getCFGMap().get(cfg);
+    for (ProgramPoint pp : nodes) {
       for (ProgramPoint peer : IPOD.get(pp)) {
         function.get(peer).add(pp);
       }

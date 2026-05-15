@@ -23,9 +23,9 @@ public class ImmediatePreDominators extends ProgramVisitor {
   }
 
   public void initializeStates(CFG cfg) {
+    Set<ProgramPoint> nodes = DataflowStateMap.getCFGMap().get(cfg);
     Map<ProgramPoint, Set<ProgramPoint>> function = DataflowStateMap.getImmediatePreDominatorsMap();
-    Map<ProgramPoint, Set<ProgramPoint>> PED = DataflowStateMap.getPreDominatorsMap();
-    for (ProgramPoint pp : PED.keySet()) {
+    for (ProgramPoint pp : nodes) {
       function.put(pp, new HashSet<>());
     }
   }
@@ -33,8 +33,9 @@ public class ImmediatePreDominators extends ProgramVisitor {
   public void visitCFG(CFG cfg) {
     initializeStates(cfg);
 
+    Set<ProgramPoint> nodes = DataflowStateMap.getCFGMap().get(cfg);
     Map<ProgramPoint, Set<ProgramPoint>> function = DataflowStateMap.getImmediatePreDominatorsMap();
-    for (ProgramPoint pp : function.keySet()) {
+    for (ProgramPoint pp : nodes) {
       Set<ProgramPoint> state = compute(cfg, pp);
       function.put(pp, state);
     }

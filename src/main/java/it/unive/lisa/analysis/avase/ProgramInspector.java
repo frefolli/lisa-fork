@@ -25,9 +25,32 @@ public class ProgramInspector extends ProgramVisitor {
   }
 
   public void visitCFG(CFG cfg) {
-    Map<String, Set<ProgramPoint>> function = DataflowStateMap.getCFGMap();
-    CodeMemberDescriptor descriptor = cfg.getDescriptor();
-    String ID = descriptor.getFullName();
-    function.put(ID, new HashSet<>(cfg.getNodes()));
+    Map<CFG, Set<ProgramPoint>> cfgMap = DataflowStateMap.getCFGMap();
+    Map<ProgramPoint, String> labellingMap = DataflowStateMap.getLabellingMap();
+
+    Set<ProgramPoint> nodes = new HashSet<>();
+    for (ProgramPoint pp : cfg.getNodes()) {
+      if (isStatement(cfg, pp)) {
+        assert !labellingMap.containsKey(pp);
+        String ID = (1 + labellingMap.size()) + "";
+        labellingMap.put(pp, ID);
+        nodes.add(pp);
+      }
+    }
+    cfgMap.put(cfg, nodes);
+  }
+
+  private boolean isStatement(CFG cfg, ProgramPoint pp) {
+    boolean is_statement = (pp instanceof Statement);
+    if (is_statement) {
+      boolean has_outgoing_edges = !cfg.getOutgoingEdges((Statement)pp).isEmpty();
+      boolean has_ingoing_edges = !cfg.getIngoingEdges((Statement)pp).isEmpty();
+      boolean is_exitpoint = cfg.getNormalExitpoints().contains(pp);
+      boolean is_entrypoint = cfg.getEntrypoints().contains(pp);
+      if (has_outgoing_edges || is_exitpoint || has_ingoing_edges || is_entrypoint) {
+        return true;
+      }
+    }
+    return false;
   }
 }
