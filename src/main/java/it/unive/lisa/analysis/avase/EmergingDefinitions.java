@@ -96,22 +96,25 @@ public class EmergingDefinitions extends SetLattice<EmergingDefinitions, Definit
 
   @Override
 	public EmergingDefinitions assignStep(ProgramPoint pp, Identifier id, SymbolicExpression expr) throws SemanticException {
-    Map<ProgramPoint, KilledDefinitions> KD = DataflowStateMap.getKilledDefinitionsMap();
-    Map<ProgramPoint, EmergingDefinitions> ED = DataflowStateMap.getEmergingDefinitionsMap();
+    if (shouldConsiderProgramPoint(pp)) {
+      Map<ProgramPoint, KilledDefinitions> KD = DataflowStateMap.getKilledDefinitionsMap();
+      Map<ProgramPoint, EmergingDefinitions> ED = DataflowStateMap.getEmergingDefinitionsMap();
 
-    if (!ED.containsKey(pp)) {
-      ED.put(pp, new EmergingDefinitions());
-    }
-    if (KD.containsKey(pp)) {
-      for (Definition peer : KD.get(pp).elements) {
-        if (!ED.containsKey(peer)) {
-          ED.put(peer.programPoint, new EmergingDefinitions(new Definition(id, pp)));
-        } else {
-          ED.put(peer.programPoint, ED.get(peer).lub(new EmergingDefinitions(new Definition(id, pp))));
+      if (!ED.containsKey(pp)) {
+        ED.put(pp, new EmergingDefinitions());
+      }
+      if (KD.containsKey(pp)) {
+        for (Definition peer : KD.get(pp).elements) {
+          if (!ED.containsKey(peer)) {
+            ED.put(peer.programPoint, new EmergingDefinitions(new Definition(id, pp)));
+          } else {
+            ED.put(peer.programPoint, ED.get(peer).lub(new EmergingDefinitions(new Definition(id, pp))));
+          }
         }
       }
+      return mk(ED.get(pp).elements);
     }
-		return mk(ED.get(pp).elements);
+    return mk(elements);
   }
 
   @Override
@@ -140,11 +143,5 @@ public class EmergingDefinitions extends SetLattice<EmergingDefinitions, Definit
 
 		// return new EmergingDefinitions((Identifier) popped, programPoint);
 		return mk(elements);
-	}
-
-	/* FUNCTIONAL LATTICE */
-
-	public EmergingDefinitions stateOfUnknown(ProgramPoint key) {
-		return this.isBottom() ? this.bottom() : this.top();
 	}
 }

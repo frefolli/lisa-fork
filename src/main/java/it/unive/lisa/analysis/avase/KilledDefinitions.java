@@ -149,10 +149,4 @@ public class KilledDefinitions extends SetLattice<KilledDefinitions, Definition>
 		// return new KilledDefinitions((Identifier) popped, programPoint);
 		return mk(elements);
 	}
-
-	/* FUNCTIONAL LATTICE */
-
-	public KilledDefinitions stateOfUnknown(ProgramPoint key) {
-		return this.isBottom() ? this.bottom() : this.top();
-	}
 }

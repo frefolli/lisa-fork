@@ -29,12 +29,15 @@ public class ProgramInspector extends ProgramVisitor {
     Map<ProgramPoint, String> labellingMap = DataflowStateMap.getLabellingMap();
 
     Set<ProgramPoint> nodes = new HashSet<>();
+
     for (ProgramPoint pp : cfg.getNodes()) {
       if (isStatement(cfg, pp)) {
         assert !labellingMap.containsKey(pp);
         String ID = (1 + labellingMap.size()) + "";
         labellingMap.put(pp, ID);
         nodes.add(pp);
+      } else {
+        System.out.println("Excluded: " + pp);
       }
     }
     cfgMap.put(cfg, nodes);

@@ -153,10 +153,4 @@ public class ReachingDefinitions extends SetLattice<ReachingDefinitions, Definit
 			throws SemanticException {
 		return mk(elements);
 	}
-
-	/* FUNCTIONAL LATTICE */
-
-	public ReachingDefinitions stateOfUnknown(ProgramPoint key) {
-		return this.isBottom() ? this.bottom() : this.top();
-	}
 }

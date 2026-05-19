@@ -156,10 +156,4 @@ public class AvailableDefinitions extends SetLattice<AvailableDefinitions, Defin
 			throws SemanticException {
 		return mk(elements);
 	}
-
-	/* FUNCTIONAL LATTICE */
-
-	public AvailableDefinitions stateOfUnknown(ProgramPoint key) {
-		return this.isBottom() ? this.bottom() : this.top();
-	}
 }

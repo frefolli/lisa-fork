@@ -11,6 +11,22 @@ public class Calculator {
     return getCalculator().simplify(expr);
   }
 
+  public static Primitive makeTrue() {
+    try {
+      return Simplex.make(Boolean.valueOf(true));
+    } catch (Exception e) {
+      throw new AvaseImplException(e);
+    }
+  }
+
+  public static Primitive makeFalse() {
+    try {
+      return Simplex.make(Boolean.valueOf(false));
+    } catch (Exception e) {
+      throw new AvaseImplException(e);
+    }
+  }
+
   public static Primitive constant(Object value) {
     try {
       return Simplex.make(value);

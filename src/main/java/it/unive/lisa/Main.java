@@ -23,6 +23,7 @@ import it.unive.lisa.analysis.avase.PreDominanceFrontier;
 import it.unive.lisa.analysis.avase.PostDominanceFrontier;
 import it.unive.lisa.analysis.avase.ControlBranch;
 import it.unive.lisa.analysis.avase.ControlDependencies;
+import it.unive.lisa.analysis.avase.AllValues;
 
 import it.unive.lisa.analysis.avase.Speculator;
 import it.unive.lisa.analysis.avase.ReachingDefinitions;
@@ -158,6 +159,8 @@ public class Main {
       speculatorsOrder.add("AD");
       speculators.put("ED", new EmergingDefinitions());
       speculatorsOrder.add("ED");
+      speculators.put("AV", new AllValues());
+      speculatorsOrder.add("AV");
 
       // we specify the analysis that we want to execute
       conf.abstractState = AdvancedAbstractState.make(
@@ -167,9 +170,6 @@ public class Main {
         speculators,
         speculatorsOrder
       );
-      // conf.abstractState = new OldAbstractState(
-      // );
-      // conf.abstractState = new Dominance();
 
       // we instantiate LiSA with our configuration
       LiSA lisa = new LiSA(conf);

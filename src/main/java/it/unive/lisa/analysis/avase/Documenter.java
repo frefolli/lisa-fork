@@ -48,6 +48,7 @@ public class Documenter {
       dumpMapOfProgramPointToSetLatticeOfDefinitions(dirPath, writer, "KD", DataflowStateMap.getKilledDefinitionsMap());
       dumpMapOfProgramPointToSetLatticeOfDefinitions(dirPath, writer, "AD", DataflowStateMap.getAvailableDefinitionsMap());
       dumpMapOfProgramPointToSetLatticeOfDefinitions(dirPath, writer, "ED", DataflowStateMap.getEmergingDefinitionsMap());
+      dumpMapOfProgramPointToSetLatticeOfSymbolicValues(dirPath, writer, "AV", DataflowStateMap.getAllValuesMap());
     }
   }
 
@@ -144,7 +145,7 @@ public class Documenter {
   public static void dumpMapOfProgramPointToSetOfProgramPoints(String dirPath, Writer writer, String ID, Map<ProgramPoint, Set<ProgramPoint>> map) throws IOException {
     writer.write("# " + ID + "\n");
     dumpMapOfProgramPointToSetOfProgramPointsAsTable(writer, ID, map);
-    dumpMapOfProgramPointToSetOfProgramPointsAsGraph(dirPath, writer, ID, map);
+    // dumpMapOfProgramPointToSetOfProgramPointsAsGraph(dirPath, writer, ID, map);
   }
 
   public static void dumpMapOfProgramPointToBranchAsGraph(String dirPath, Writer writer, String ID, Map<ProgramPoint, Branch> map) throws IOException {
@@ -196,7 +197,7 @@ public class Documenter {
   public static void dumpMapOfProgramPointToBranch(String dirPath, Writer writer, String ID, Map<ProgramPoint, Branch> map) throws IOException {
     writer.write("# " + ID + "\n");
     dumpMapOfProgramPointToBranchAsTable(writer, ID, map);
-    dumpMapOfProgramPointToBranchAsGraph(dirPath, writer, ID, map);
+    // dumpMapOfProgramPointToBranchAsGraph(dirPath, writer, ID, map);
   }
 
   public static void dumpMapOfProgramPointToSetOfBranchesAsGraph(String dirPath, Writer writer, String ID, Map<ProgramPoint, Set<Branch>> map) throws IOException {
@@ -251,7 +252,7 @@ public class Documenter {
   public static void dumpMapOfProgramPointToSetOfBranches(String dirPath, Writer writer, String ID, Map<ProgramPoint, Set<Branch>> map) throws IOException {
     writer.write("# " + ID + "\n");
     dumpMapOfProgramPointToSetOfBranchesAsTable(writer, ID, map);
-    dumpMapOfProgramPointToSetOfBranchesAsGraph(dirPath, writer, ID, map);
+    // dumpMapOfProgramPointToSetOfBranchesAsGraph(dirPath, writer, ID, map);
   }
 
   public static void dumpMapOfProgramPointToSetLatticeOfDefinitionsAsTable(Writer writer, String ID, Map<ProgramPoint, ? extends SetLattice<?, Definition>> map) throws IOException {
@@ -278,6 +279,32 @@ public class Documenter {
   public static void dumpMapOfProgramPointToSetLatticeOfDefinitions(String dirPath, Writer writer, String ID, Map<ProgramPoint, ? extends SetLattice<?, Definition>> map) throws IOException {
     writer.write("# " + ID + "\n");
     dumpMapOfProgramPointToSetLatticeOfDefinitionsAsTable(writer, ID, map);
+  }
+
+  public static void dumpMapOfProgramPointToSetLatticeOfSymbolicValuesAsTable(Writer writer, String ID, Map<ProgramPoint, ? extends SetLattice<?, SymbolicValue>> map) throws IOException {
+    Map<ProgramPoint, String> labellingMap = DataflowStateMap.getLabellingMap();
+    writer.write("|  N  | " + ID + " |\n");
+    writer.write("| --- | --- |\n");
+    for (ProgramPoint pp : map.keySet()) {
+      Set<SymbolicValue> state = map.get(pp).elements;
+      writer.write("| " + nodeLabel(labellingMap.get(pp)) + " | $\\{");
+      boolean first = true;
+      for (SymbolicValue peer : state) {
+        if (first) {
+          first = false;
+        } else {
+          writer.write(", ");
+        }
+        writer.write("(" + peer.value + ", " + peer.condition + ")");
+      }
+      writer.write("\\}$ |\n");
+    }
+    writer.write("\n");
+  }
+
+  public static void dumpMapOfProgramPointToSetLatticeOfSymbolicValues(String dirPath, Writer writer, String ID, Map<ProgramPoint, ? extends SetLattice<?, SymbolicValue>> map) throws IOException {
+    writer.write("# " + ID + "\n");
+    dumpMapOfProgramPointToSetLatticeOfSymbolicValuesAsTable(writer, ID, map);
   }
 
   public static void compileWithD2(String input, String output) throws IOException {
