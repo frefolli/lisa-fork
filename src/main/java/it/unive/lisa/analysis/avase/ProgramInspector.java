@@ -35,7 +35,6 @@ public class ProgramInspector extends ProgramVisitor {
         assert !labellingMap.containsKey(pp);
         Integer ID = Integer.valueOf(1 + labellingMap.size());
         labellingMap.put(pp, ID);
-        System.out.println(ID + ": " + pp.getClass());
         nodes.add(pp);
       } else {
         System.out.println("Excluded: " + pp);

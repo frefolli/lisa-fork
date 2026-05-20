@@ -1,0 +1,20 @@
+class Example {
+  main(in0, in1) {
+    def x = in0 + 0;
+    def y = in1 + 0;
+    def z = -x + y;
+    def w = 0;
+    if (x > y) {
+      w = z * x;
+    } else {
+      w = 2 * z;
+    }
+    while (w < 10) {
+      w = w + 11;
+    }
+    while (w > 0) {
+      w = w - 3;
+    }
+    return z * w;
+  }
+}

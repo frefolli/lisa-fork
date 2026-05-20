@@ -9,3 +9,6 @@ example2:
 
 example3:
 	clear && ./gradlew run --args="=i example3 =v"
+
+example4:
+	clear && ./gradlew run --args="=i example4 =v"

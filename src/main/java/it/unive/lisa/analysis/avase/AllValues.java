@@ -20,6 +20,7 @@ import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.analysis.lattices.SetLattice;
+import it.unive.lisa.program.cfg.controlFlow.Loop;
 
 import jbse.val.Primitive;
 
@@ -85,14 +86,25 @@ public class AllValues extends SetLattice<AllValues, SymbolicValue>
 		return false;
 	}
 
+  /* Inspects */
+
+  public static boolean isCondition(ProgramPoint pp) {
+    return pp.getCFG().getControlFlowStructureOf(pp) != null;
+  }
+
+  public static boolean isLoopCondition(ProgramPoint pp) {
+    return pp.getCFG().getControlFlowStructureOf(pp) instanceof Loop;
+  }
+
   /* SPECULATOR */
 
   @Override
 	public AllValues normalStep(ProgramPoint pp) throws SemanticException {
     if (shouldConsiderProgramPoint(pp)) {
-      if (pp.getCFG().getControlFlowStructureOf(pp) != null) {
+      if (isCondition(pp)) {
         AllValues state = new AllValues(new SymbolicValue(AstTransmuter.visit(pp), Calculator.makeTrue()));
         DataflowStateMap.getAllValuesMap().put(pp, state);
+        System.out.println("AV::Update(" + pp + ")");
         return state;
       }
     }
@@ -104,6 +116,7 @@ public class AllValues extends SetLattice<AllValues, SymbolicValue>
     if (shouldConsiderProgramPoint(pp)) {
       AllValues state = new AllValues(new SymbolicValue(SymExpTransmuter.visit(expr), Calculator.makeTrue()));
       DataflowStateMap.getAllValuesMap().put(pp, state);
+      System.out.println("AV::Update(" + pp + ")");
       return state;
     }
     return new AllValues();
