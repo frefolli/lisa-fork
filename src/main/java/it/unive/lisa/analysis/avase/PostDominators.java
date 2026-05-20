@@ -30,7 +30,9 @@ public class PostDominators extends ProgramVisitor {
     for (ProgramPoint pp : nodes) {
       boolean is_exitpoint = cfg.getNormalExitpoints().contains(pp);
       Set<ProgramPoint> state = new HashSet<ProgramPoint>();
-      if (!is_exitpoint) {
+      if (is_exitpoint) {
+        state.add(pp);
+      } else {
         for (ProgramPoint p : cfg.getNodes()) {
           state.add(p);
         }

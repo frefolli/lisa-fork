@@ -13,7 +13,7 @@ import java.io.IOException;
 
 public class DataflowStateMap {
   private static final Map<CFG, Set<ProgramPoint>> cfgMap = new HashMap<>();
-  private static final Map<ProgramPoint, String> labellingMap = new HashMap<>();
+  private static final Map<ProgramPoint, Integer> labellingMap = new HashMap<>();
   private static final Map<ProgramPoint, Set<ProgramPoint>> postDominatorsMap = new HashMap<>();
   private static final Map<ProgramPoint, Set<ProgramPoint>> preDominatorsMap = new HashMap<>();
   private static final Map<ProgramPoint, Set<ProgramPoint>> immediatePostDominatorsMap = new HashMap<>();
@@ -37,7 +37,7 @@ public class DataflowStateMap {
     return cfgMap;
   }
 
-  public static Map<ProgramPoint, String> getLabellingMap() {
+  public static Map<ProgramPoint, Integer> getLabellingMap() {
     return labellingMap;
   }
 

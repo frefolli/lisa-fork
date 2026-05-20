@@ -43,7 +43,9 @@ class ControlDependencies {
     }
     def z = x * y;
   }
-  es4(i, x, y) {
+  es4(i, ix, iy) {
+    def x = ix + 0;
+    def y = iy + 0;
     if (x > 0) {
       while (i > 0) {
         i = i - 1;

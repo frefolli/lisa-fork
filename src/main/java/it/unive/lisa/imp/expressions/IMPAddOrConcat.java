@@ -80,30 +80,35 @@ public class IMPAddOrConcat extends it.unive.lisa.program.cfg.statement.BinaryEx
 
 		for (Type tleft : ltypes)
 			for (Type tright : rtypes) {
-				if (tleft.isStringType())
-					if (tright.isStringType() || tright.isUntyped())
+				if (tleft.isStringType()) {
+					if (tright.isStringType() || tright.isUntyped()) {
 						op = StringConcat.INSTANCE;
-					else
+          } else {
 						op = null;
-				else if (tleft.isNumericType())
-					if (tright.isNumericType() || tright.isUntyped())
+          }
+        } else if (tleft.isNumericType()) {
+					if (tright.isNumericType() || tright.isUntyped()) {
 						op = NumericNonOverflowingAdd.INSTANCE;
-					else
+          } else {
 						op = null;
-				else if (tleft.isUntyped())
-					if (tright.isStringType())
+          }
+        } else if (tleft.isUntyped()) {
+					if (tright.isStringType()) {
 						op = StringConcat.INSTANCE;
-					else if (tright.isNumericType() || tright.isUntyped())
+          } else if (tright.isNumericType() || tright.isUntyped()) {
 						// arbitrary choice: if both are untyped, we consider it
 						// as a numeric sum
 						op = NumericNonOverflowingAdd.INSTANCE;
-					else
+          } else {
 						op = null;
-				else
+          }
+        } else {
 					op = null;
+        }
 
-				if (op == null)
+				if (op == null) {
 					continue;
+        }
 
 				Type t = Type.commonSupertype(op.typeInference(types, ltypes, rtypes), Untyped.INSTANCE);
 				result = result.lub(state.smallStepSemantics(

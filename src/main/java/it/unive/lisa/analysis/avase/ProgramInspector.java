@@ -26,15 +26,16 @@ public class ProgramInspector extends ProgramVisitor {
 
   public void visitCFG(CFG cfg) {
     Map<CFG, Set<ProgramPoint>> cfgMap = DataflowStateMap.getCFGMap();
-    Map<ProgramPoint, String> labellingMap = DataflowStateMap.getLabellingMap();
+    Map<ProgramPoint, Integer> labellingMap = DataflowStateMap.getLabellingMap();
 
     Set<ProgramPoint> nodes = new HashSet<>();
 
     for (ProgramPoint pp : cfg.getNodes()) {
       if (isStatement(cfg, pp)) {
         assert !labellingMap.containsKey(pp);
-        String ID = (1 + labellingMap.size()) + "";
+        Integer ID = Integer.valueOf(1 + labellingMap.size());
         labellingMap.put(pp, ID);
+        System.out.println(ID + ": " + pp.getClass());
         nodes.add(pp);
       } else {
         System.out.println("Excluded: " + pp);
