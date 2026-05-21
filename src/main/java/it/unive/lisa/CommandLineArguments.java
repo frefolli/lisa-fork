@@ -1,47 +1,38 @@
 package it.unive.lisa;
+import java.util.List;
+import java.util.ArrayList;
 
 public class CommandLineArguments {
-  private String inputName;
-  private boolean withReachingDefinitions;
-  private boolean withKilledDefinitions;
+  private List<String> inputPaths;
   private boolean verbose;
+  private String output;
 
-  public CommandLineArguments(String inputName,
-                              boolean withReachingDefinitions,
-                              boolean withKilledDefinitions,
-                              boolean verbose) {
-    this.inputName = inputName;
-    this.withReachingDefinitions = withReachingDefinitions;
-    this.withKilledDefinitions = withKilledDefinitions;
+  public CommandLineArguments(List<String> inputPaths,
+                              boolean verbose,
+                              String output) {
+    this.inputPaths = inputPaths;
     this.verbose = verbose;
+    this.output = output;
   }
 
   public CommandLineArguments() {
-    this("input", false, false, false);
+    this(new ArrayList<>(), false, "/tmp/avase-lisa-out");
   }
 
-  public void setInputName(String inputName) {
-    this.inputName = inputName;
+  public void addInputPath(String inputPath) {
+    this.inputPaths.add(inputPath);
   }
 
-  public String getInputName() {
-    return inputName;
+  public List<String> getInputPaths() {
+    return inputPaths;
   }
 
-  public void setWithKilledDefinitions(boolean value) {
-    this.withKilledDefinitions = value;
+  public void setOutput(String value) {
+    this.output = value;
   }
 
-  public boolean withKilledDefinitions() {
-    return withKilledDefinitions;
-  }
-
-  public void setWithReachingDefinitions(boolean value) {
-    this.withReachingDefinitions = value;
-  }
-
-  public boolean withReachingDefinitions() {
-    return withReachingDefinitions;
+  public String getOutput() {
+    return output;
   }
 
   public void setVerbose(boolean value) {
