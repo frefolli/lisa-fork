@@ -24,6 +24,7 @@ import it.unive.lisa.symbolic.value.ValueExpression;
 import it.unive.lisa.type.Type;
 import it.unive.lisa.type.TypeTokenType;
 import it.unive.lisa.analysis.lattices.SetLattice;
+import it.unive.lisa.logging.Logger;
 
 public class EmergingDefinitions extends SetLattice<EmergingDefinitions, Definition>
   implements Speculator<EmergingDefinitions> {

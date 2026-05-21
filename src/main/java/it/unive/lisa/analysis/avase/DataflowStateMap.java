@@ -1,8 +1,10 @@
 package it.unive.lisa.analysis.avase;
 
+import java.util.stream.Collectors;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import it.unive.lisa.program.cfg.CFG;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.io.FileOutputStream;
@@ -10,6 +12,7 @@ import java.io.Writer;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.io.IOException;
+import it.unive.lisa.analysis.lattices.SetLattice;
 
 public class DataflowStateMap {
   private static final Map<CFG, Set<ProgramPoint>> cfgMap = new HashMap<>();
@@ -108,6 +111,11 @@ public class DataflowStateMap {
   public static Map<ProgramPoint, AllValues> getAllValuesMap() {
     return allValuesMap;
   }
+
+  public static String labelize(ProgramPoint pp) {
+    return labellingMap.get(pp).toString();
+  }
+
 
   public static void clear() {
     cfgMap.clear();

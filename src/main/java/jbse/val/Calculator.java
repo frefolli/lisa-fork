@@ -254,7 +254,7 @@ public abstract class Calculator {
      * Factory method for {@link Term}s.
      * 
      * @param type a {@code char} representing the type of the symbol 
-     *        (see {@link Type}).
+     *        (see {jbse.common.Type}).
      * @param value a {@link String} representing the conventional
      *        value of the term.
      * @return a {@link Term}.
@@ -530,7 +530,7 @@ public abstract class Calculator {
      * {@link Term}.
      * 
      * @param type a {@code char} representing the type of the symbol 
-     *        (see {@link Type}).
+     *        (see {jbse.common.Type}).
      * @param value a {@link String} representing the conventional
      *        value of the term.
      * @return this {@link Calculator}.
@@ -606,7 +606,7 @@ public abstract class Calculator {
      * and immediately returns the result.
      *  
      * @param type a {@code char} representing the type of the return value of {@code operator}
-     *        (see {@link Type}).
+     *        (see {jbse.common.Type}).
      * @param historyPoint the current {@link HistoryPoint}.
      * @param operator a {@code String} representing the function to be applied.
      * @param args a varargs of {@link Value}s representing the arguments to the function.
@@ -625,7 +625,7 @@ public abstract class Calculator {
      * pushes the result on the top of the stack.
      *  
      * @param type a {@code char} representing the type of the return value of {@code operator}
-     *        (see {@link Type}).
+     *        (see {jbse.common.Type}).
      * @param historyPoint the current {@link HistoryPoint}.
      * @param operator a {@code String} representing the function to be applied.
      * @param args a varargs of {@link Value}s representing the arguments to the function.
@@ -1119,7 +1119,7 @@ public abstract class Calculator {
      * Converts the topmost {@link Primitive} on the stack to a 
      * wider type, and replaces the top of the stack with the result.
      * 
-     * @param type a {@code char} representing the type of the conversion (see {@link Type}).
+     * @param type a {@code char} representing the type of the conversion (see {jbse.common.Type}).
      * @return this {@link Calculator}.
      * @throws InvalidTypeException if the operand cannot be widened to {@code type},
      *         or {@code type} is not a valid primitive type.
@@ -1139,7 +1139,7 @@ public abstract class Calculator {
      * Converts the topmost {@link Primitive} on the stack to a 
      * narrower type, and replaces the top of the stack with the result.
      * 
-     * @param type a {@code char} representing the type of the conversion (see {@link Type}).
+     * @param type a {@code char} representing the type of the conversion (see {jbse.common.Type}).
      * @return this {@link Calculator}.
      * @throws InvalidTypeException if the operand cannot be narrowed to {@code type},
      *         or {@code type} is not a valid primitive type.

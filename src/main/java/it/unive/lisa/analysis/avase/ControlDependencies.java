@@ -51,8 +51,7 @@ public class ControlDependencies extends ProgramVisitor {
         ProgramPoint s = edge.getDestination();
         if (POD.get(s).contains(n)) {
           if (CB.get(s).choice == null) {
-            System.err.println("proc: " + d.getCFG().getDescriptor().getFullName() + "; d = {" + d + "}; s = {" + s + "}; n = {" + n + "}");
-            throw new AvaseImplException("proc: " + d.getCFG().getDescriptor().getFullName() + "; d = {" + d + "}; s = {" + s + "}; n = {" + n + "}");
+            throw new AvaseImplException("proc: " + d.getCFG().getDescriptor().getFullName() + "; d = {" + DataflowStateMap.labelize(d) + "}; s = {" + DataflowStateMap.labelize(s) + "}; n = {" + DataflowStateMap.labelize(n) + "}");
           } else {
             state.add(new Branch(d, CB.get(s).choice));
           }

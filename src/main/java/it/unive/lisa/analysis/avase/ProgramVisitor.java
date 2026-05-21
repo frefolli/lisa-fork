@@ -1,4 +1,5 @@
 package it.unive.lisa.analysis.avase;
+import it.unive.lisa.logging.Logger;
 
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,6 @@ public class ProgramVisitor {
 
   public void visitCFG(CFG cfg) {
     CodeMemberDescriptor descriptor = cfg.getDescriptor();
-    System.out.println("fn " + descriptor.getFullName());
+    Logger.logInfo("fn " + descriptor.getFullName());
   }
 }

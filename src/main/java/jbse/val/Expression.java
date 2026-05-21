@@ -299,6 +299,7 @@ public final class Expression extends PrimitiveSymbolicComputed {
                 return false;
             }
         } else if (!this.secondOp.equals(other.secondOp)) {
+          System.err.println("MIUR ALERT");
             return false;
         }
         return true;

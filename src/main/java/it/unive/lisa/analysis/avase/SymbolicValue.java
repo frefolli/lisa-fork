@@ -28,23 +28,30 @@ public class SymbolicValue implements StructuredObject {
 	@Override
 	public boolean equals(
 			Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+    }
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+    }
+		if (getClass() != obj.getClass()) {
 			return false;
+    }
 		SymbolicValue other = (SymbolicValue) obj;
 		if (value == null) {
-			if (other.value != null)
+			if (other.value != null) {
 				return false;
-		} else if (!value.equals(other.value))
+      }
+		} else if (!value.equals(other.value)) {
 			return false;
+    }
 		if (condition == null) {
-			if (other.condition != null)
+			if (other.condition != null) {
 				return false;
-		} else if (!condition.equals(other.condition))
+      }
+		} else if (!condition.equals(other.condition)) {
 			return false;
+    }
 		return true;
 	}
 }

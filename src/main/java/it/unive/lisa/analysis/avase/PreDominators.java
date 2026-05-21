@@ -1,5 +1,6 @@
 package it.unive.lisa.analysis.avase;
 
+import it.unive.lisa.logging.Logger;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import java.util.Set;

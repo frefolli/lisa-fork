@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.Collections;
 import java.util.function.Predicate;
 
+import it.unive.lisa.logging.Logger;
 import it.unive.lisa.analysis.ScopeToken;
 import it.unive.lisa.analysis.SemanticException;
 import it.unive.lisa.analysis.lattices.ExpressionSet;
@@ -98,15 +99,24 @@ public class AllValues extends SetLattice<AllValues, SymbolicValue>
 
   /* SPECULATOR */
 
+	public AllValues evaluate(ProgramPoint programPoint, Primitive expr) throws SemanticException {
+    Set<String> variables = VariableEnumerator.process(expr);
+    // Map<String, Set<Definition>> definitions = DefinitionPartitioner.process(variables, DataflowStateMap.getReachingDefinitionsMap().get(programPoint).elements);
+    // Logger.logDebug("expr = " + expr + "; variables = " + variables + "; definitions = " + definitions);
+    // CartesianDefinitionCombinator.process(definitions);
+
+    Primitive PC_cdep = ControlDependencyPathConditionComputer.process(programPoint);
+    Logger.logDebug("PC_cdep of " + DataflowStateMap.labelize(programPoint) + " is " + PC_cdep);
+
+    AllValues state = new AllValues(new SymbolicValue(expr, Calculator.makeTrue()));
+    DataflowStateMap.getAllValuesMap().put(programPoint, state);
+    return state;
+  }
+
   @Override
 	public AllValues normalStep(ProgramPoint pp) throws SemanticException {
-    if (shouldConsiderProgramPoint(pp)) {
-      if (isCondition(pp)) {
-        AllValues state = new AllValues(new SymbolicValue(AstTransmuter.visit(pp), Calculator.makeTrue()));
-        DataflowStateMap.getAllValuesMap().put(pp, state);
-        System.out.println("AV::Update(" + pp + ")");
-        return state;
-      }
+    if (shouldConsiderProgramPoint(pp) && isCondition(pp)) {
+      return evaluate(pp, AstTransmuter.visit(pp));
     }
     return new AllValues();
   }
@@ -114,10 +124,7 @@ public class AllValues extends SetLattice<AllValues, SymbolicValue>
   @Override
 	public AllValues assignStep(ProgramPoint pp, Identifier id, SymbolicExpression expr) throws SemanticException {
     if (shouldConsiderProgramPoint(pp)) {
-      AllValues state = new AllValues(new SymbolicValue(SymExpTransmuter.visit(expr), Calculator.makeTrue()));
-      DataflowStateMap.getAllValuesMap().put(pp, state);
-      System.out.println("AV::Update(" + pp + ")");
-      return state;
+      return evaluate(pp, SymExpTransmuter.visit(expr));
     }
     return new AllValues();
   }

@@ -33,22 +33,22 @@ public class Logger {
 
   public static void logFatal(String msg) {
     if (INSTANCE.logLevel.isAtMost(LogLevel.FATAL)) {
-      System.out.println(msg);
+      System.out.println("[FATAL] " + msg);
     }
   }
   public static void logWarn(String msg) {
     if (INSTANCE.logLevel.isAtMost(LogLevel.WARN)) {
-      System.out.println(msg);
+      System.out.println("[WARN] " + msg);
     }
   }
   public static void logInfo(String msg) {
     if (INSTANCE.logLevel.isAtMost(LogLevel.INFO)) {
-      System.out.println(msg);
+      System.out.println("[INFO] " + msg);
     }
   }
   public static void logDebug(String msg) {
     if (INSTANCE.logLevel.isAtMost(LogLevel.DEBUG)) {
-      System.out.println(msg);
+      System.out.println("[DEBUG] " + msg);
     }
   }
 }

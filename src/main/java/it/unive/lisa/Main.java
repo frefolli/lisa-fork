@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 
+import it.unive.lisa.analysis.avase.DataflowStateMap;
 import it.unive.lisa.analysis.avase.ProgramInspector;
 import it.unive.lisa.analysis.avase.PreDominators;
 import it.unive.lisa.analysis.avase.PostDominators;
@@ -95,7 +96,8 @@ public class Main {
       }
 
       if (inputFiles.isEmpty()) {
-        throw new IllegalArgumentException("avase-lisa requires IMP files as input");
+        Logger.logWarn("avase-lisa requires IMP files as input");
+        return;
       }
         
       Path currentPath = Paths.get(".").toAbsolutePath().normalize();
@@ -103,6 +105,7 @@ public class Main {
       for (File inputFile :inputFiles) {
         String outputPath = cliArgs.getOutput() + "/" + mangleFilePath(currentPath, inputFile);
         cleanOutputDirectoryIfDirty(outputPath);
+        DataflowStateMap.clear();
 
         // we parse the program to get the CFG representation of the code in it
         Logger.logInfo("> IMPFrontend.processFile(inputFile) :: START");
@@ -197,7 +200,7 @@ public class Main {
         // finally, we tell LiSA to analyze the program
         lisa.run(program);
 
-        Documenter.dump(outputPath);
+        Documenter.dump(outputPath, inputFile);
       }
     } catch (CommandLineException e) {
       cli.printHelp();

@@ -1,4 +1,5 @@
 package it.unive.lisa.analysis.avase;
+import it.unive.lisa.logging.Logger;
 
 /**
  * Exception thrown whenever there is a Avase implementation error.
@@ -14,7 +15,7 @@ public class AvaseImplException extends RuntimeException {
 
   public AvaseImplException(Throwable param) {
     super(param);
-    System.err.println(getMessage());
+    Logger.logFatal(getMessage());
   }
 
   public AvaseImplException(String param) {

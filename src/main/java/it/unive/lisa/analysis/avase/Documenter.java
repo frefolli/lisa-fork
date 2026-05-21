@@ -1,5 +1,8 @@
 package it.unive.lisa.analysis.avase;
 
+import java.io.File;
+import java.util.Scanner;
+import it.unive.lisa.logging.Logger;
 import it.unive.lisa.program.cfg.ProgramPoint;
 import java.util.Map;
 import java.util.Set;
@@ -50,10 +53,10 @@ public class Documenter {
     return "N" + ID;
   }
 
-  public static void dump(String dirPath) throws IOException {
+  public static void dump(String dirPath, File inputFile) throws IOException {
     String readme = dirPath + "/README.md";
 		try (Writer writer = new OutputStreamWriter(new FileOutputStream(readme), StandardCharsets.UTF_8.newEncoder())) {
-      List<String> codes = List.of("CFGS", "LABEL",
+      List<String> codes = List.of("IMP", "CFGS", "LABEL",
                                    "POD", "IPOD", "rPOD", "rIPOD",
                                    "PED", "IPED", "rPED", "rIPED",
                                    "POF", "PEF",
@@ -67,6 +70,13 @@ public class Documenter {
         writer.write(" - [" + code + "](#user-content-" + code.toLowerCase() + ")\n");
       }
       writer.write("\n");
+      writer.write("\n");
+
+      writer.write("# IMP\n");
+      writer.write("```\n");
+      writer.write(new Scanner(inputFile).useDelimiter("\\Z").next());
+      writer.write("\n");
+      writer.write("```\n");
       writer.write("\n");
 
       dumpControlFlowGraphs(dirPath, writer);
@@ -357,9 +367,9 @@ public class Documenter {
   public static void compileWithD2(String input, String output) throws IOException {
     try {
       String command = String.format("d2 %s %s", input, output);
-      System.out.println("|> " + command);
+      Logger.logDebug("|> " + command);
       int retval = Runtime.getRuntime().exec(command).waitFor();
-      System.out.println("|> " + command + " :: " + retval);
+      Logger.logDebug("|> " + command + " :: " + retval);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
