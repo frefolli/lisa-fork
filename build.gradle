@@ -1,17 +1,27 @@
+buildscript {
+  repositories {
+    mavenCentral()
+    gradlePluginPortal()
+
+    dependencies {
+      classpath 'com.gradleup.shadow:shadow-gradle-plugin:8.3.0'
+    }
+  }
+}
+
 plugins {
 	id 'antlr'
   id 'java-library'
   id 'application'
   id 'ca.coglinc2.javacc' version '3.0.0'
+  id 'com.gradleup.shadow' version '8.3.0'
 }
 
-repositories {
-  mavenCentral()
-  gradlePluginPortal()
-}
+
 
 apply from: 'init.gradle'
 apply from: 'java.gradle'
+apply plugin: 'com.gradleup.shadow'
 
 group = 'it.unive'
 version = '1.0'
