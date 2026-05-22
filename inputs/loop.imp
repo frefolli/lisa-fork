@@ -1,0 +1,11 @@
+class Simple {
+  main() {
+    def result = 0;
+    def i = 0;
+    while (i < 3) {
+      result = result + 1;
+      i = i + 1;
+    }
+    return result;
+  }
+}

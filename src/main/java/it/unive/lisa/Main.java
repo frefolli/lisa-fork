@@ -120,6 +120,7 @@ public class Main {
         PreDominators.computeAll(program);
         Logger.logInfo("> PreDominators.computeAll(program) :: END");
 
+
         Logger.logInfo("> PostDominators.computeAll(program) :: START");
         PostDominators.computeAll(program);
         Logger.logInfo("> PostDominators.computeAll(program) :: END");
@@ -201,6 +202,7 @@ public class Main {
         lisa.run(program);
 
         Documenter.dump(outputPath, inputFile);
+
       }
     } catch (CommandLineException e) {
       cli.printHelp();

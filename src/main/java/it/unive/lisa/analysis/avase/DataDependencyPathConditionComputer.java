@@ -9,6 +9,12 @@ import it.unive.lisa.logging.Logger;
 
 public class DataDependencyPathConditionComputer {
   public static Primitive process(DefinitionCombination combination) {
-    return Calculator.makeTrue();
+    Primitive[] conditions = new Primitive[combination.symbolicValues.size()];
+    int idx = 0;
+    for (SymbolicValue symbolicValue : combination.symbolicValues.values()) {
+      conditions[idx] = symbolicValue.condition;
+      idx += 1;
+    }
+    return Calculator.naryAndExpression(conditions);
   }
 }

@@ -8,7 +8,7 @@ import java.util.Set;
 import it.unive.lisa.logging.Logger;
 
 public class KillDependencyPathConditionComputer {
-  public static Primitive process(DefinitionCombination combination) {
+  public static Primitive process(Map<Definition, Primitive> survival, DefinitionCombination combination) {
     return Calculator.makeTrue();
   }
 }

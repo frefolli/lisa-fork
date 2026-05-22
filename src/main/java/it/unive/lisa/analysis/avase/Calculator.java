@@ -59,6 +59,36 @@ public class Calculator {
     }
   }
 
+  public static Primitive unaryNot(Primitive value) {
+    try {
+      return Expression.makeExpressionUnary(Operator.NOT, value);
+    } catch (Exception e) {
+      throw new AvaseImplException(e);
+    }
+  }
+
+  public static Primitive naryExpression(Operator operator, Primitive ...arguments) {
+    if (arguments.length == 0) {
+      return makeTrue();
+    }
+    if (arguments.length == 1) {
+      return arguments[0];
+    }
+    Primitive result = binaryExpression(arguments[0], operator, arguments[1]);
+    for (int argi = 2; argi < arguments.length; ++argi) {
+      result = binaryExpression(result, operator, arguments[1]);
+    }
+    return result;
+  }
+
+  public static Primitive naryAndExpression(Primitive ...arguments) {
+    return naryExpression(Operator.AND, arguments);
+  }
+
+  public static Primitive naryOrExpression(Primitive ...arguments) {
+    return naryExpression(Operator.OR, arguments);
+  }
+
   public static jbse.val.Calculator getCalculator() {
     if (CALCULATOR == null) {
       CALCULATOR = createCalculator();

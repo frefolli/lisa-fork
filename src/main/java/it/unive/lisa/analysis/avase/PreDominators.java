@@ -51,6 +51,7 @@ public class PreDominators extends ProgramVisitor {
         Set<ProgramPoint> new_state = compute(cfg, pp);
         if (!old_state.equals(new_state)) {
           changed = true;
+          Logger.logDebug("[CHANGED](" + DataflowStateMap.labelize(pp) + ") => (" + DataflowStateMap.labelize(old_state) + ") != (" + DataflowStateMap.labelize(new_state) + ")");
           function.put(pp, new_state);
         }
       }

@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Collections;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import it.unive.lisa.logging.Logger;
 import it.unive.lisa.analysis.ScopeToken;
@@ -104,19 +105,31 @@ public class AllValues extends SetLattice<AllValues, SymbolicValue>
     Set<Definition> reachingDefinitions = ReachingDefinitionsFilter.process(DataflowStateMap.getReachingDefinitionsMap().get(programPoint).elements);
     Map<String, Set<Definition>> definitions = DefinitionPartitioner.process(variables, reachingDefinitions);
     Logger.logDebug("expr = " + expr + "; variables = " + variables + "; definitions = " + definitions);
-
     Primitive PC_cdep = ControlDependencyPathConditionComputer.process(programPoint);
+    Logger.logDebug("PC_cdep of " + DataflowStateMap.labelize(programPoint) + " is " + PC_cdep);
 
-    CartesianDefinitionCombinator.process(definitions).forEach(combination -> {
-      Primitive PC_ddep = DataDependencyPathConditionComputer.process(combination);
-      Primitive PC_kdep = KillDependencyPathConditionComputer.process(combination);
+    Map<Definition, Primitive> definitionsControlConditions = DefinitionPathConditionPrecomputer.process(definitions);
+    Logger.logDebug("definitionsControlConditions of " + DataflowStateMap.labelize(programPoint) + " is " + definitionsControlConditions);
+
+    Map<Definition, Primitive> definitionsSurvivalConditions = DefinitionSurvivalPathConditionPrecomputer.process(definitionsControlConditions, definitions);
+    Logger.logDebug("definitionsSurvivalConditions of " + DataflowStateMap.labelize(programPoint) + " is " + definitionsSurvivalConditions);
+
+    /*Set<SymbolicValue> possibleValues = */CartesianDefinitionCombinator.process(definitions).forEach(combination -> {
       Logger.logDebug(" - " + combination.toString());
-      Logger.logDebug("   PC_cdep of " + DataflowStateMap.labelize(programPoint) + " is " + PC_cdep);
-      Logger.logDebug("   PC_ddep of " + DataflowStateMap.labelize(programPoint) + " is " + PC_ddep);
-      Logger.logDebug("   PC_kdep of " + DataflowStateMap.labelize(programPoint) + " is " + PC_kdep);
-    });
 
-    AllValues state = new AllValues(new SymbolicValue(expr, Calculator.makeTrue()));
+      Primitive PC_ddep = DataDependencyPathConditionComputer.process(combination);
+      Logger.logDebug("   PC_ddep is " + PC_ddep);
+
+      Primitive PC_kdep = KillDependencyPathConditionComputer.process(definitionsSurvivalConditions, combination);
+      Logger.logDebug("   PC_kdep is " + PC_kdep);
+
+      Primitive PC = Calculator.naryAndExpression(PC_cdep, PC_ddep, PC_kdep);
+      Logger.logDebug("   PC of is " + PC);
+
+      // Primitive value = VariableReplacer.process(
+    })/*.collect(Collectors::toSet)*/;
+
+    AllValues state = new AllValues();
     DataflowStateMap.getAllValuesMap().put(programPoint, state);
     return state;
   }

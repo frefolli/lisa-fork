@@ -112,6 +112,14 @@ public class DataflowStateMap {
     return allValuesMap;
   }
 
+  public static String labelize(Set<ProgramPoint> pps) {
+    Set<String> result = new HashSet<>();
+    for (ProgramPoint pp : pps) {
+      result.add(labelize(pp));
+    }
+    return result.toString();
+  }
+
   public static String labelize(ProgramPoint pp) {
     return labellingMap.get(pp).toString();
   }
