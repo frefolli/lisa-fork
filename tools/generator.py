@@ -68,17 +68,17 @@ def generate_code_block(num: int = 0, opts: int = 4):
   assert opts > 0
   listing = []
 
-  var_name = 'a_%s' % num
+  var_name = 'v%s' % num
   exprs = []
 
   # listing.append("// code block %s" % num)
-  exprs.append("e_%s_0" % num)
+  exprs.append("i%s0" % num)
   listing.append("    def %s = %s;" % (var_name, exprs[-1]))
-  exprs.append("e_%s_1" % num)
+  exprs.append("i%s1" % num)
   listing.append("if (%s >= 0) {" % exprs[-1])
   listing.append("  %s = 1;" % var_name)
   for i in range(2, opts + 1):
-    exprs.append("e_%s_%s" % (num, i))
+    exprs.append("i%s%s" % (num, i))
     listing.append("} else if (%s >= 0) {" % exprs[-1])
     listing.append("  %s = 1;" % var_name)
   listing.append("}")

@@ -1,42 +1,42 @@
 class Generated {
   func_2_4(
-    e_1_0,
-    e_1_1,
-    e_1_2,
-    e_1_3,
-    e_1_4,
-    e_2_0,
-    e_2_1,
-    e_2_2,
-    e_2_3,
-    e_2_4
+    i10,
+    i11,
+    i12,
+    i13,
+    i14,
+    i20,
+    i21,
+    i22,
+    i23,
+    i24
   ) {
     def allneg = true;
   
-    def a_1 = e_1_0;
-    if (e_1_1 >= 0) {
-      a_1 = 1;
-    } else if (e_1_2 >= 0) {
-      a_1 = 1;
-    } else if (e_1_3 >= 0) {
-      a_1 = 1;
-    } else if (e_1_4 >= 0) {
-      a_1 = 1;
+    def v1 = i10;
+    if (i11 >= 0) {
+      v1 = 1;
+    } else if (i12 >= 0) {
+      v1 = 1;
+    } else if (i13 >= 0) {
+      v1 = 1;
+    } else if (i14 >= 0) {
+      v1 = 1;
     }
-    if (a_1 >= 0) {
+    if (v1 >= 0) {
       allneg = false;
     }
-    def a_2 = e_2_0;
-    if (e_2_1 >= 0) {
-      a_2 = 1;
-    } else if (e_2_2 >= 0) {
-      a_2 = 1;
-    } else if (e_2_3 >= 0) {
-      a_2 = 1;
-    } else if (e_2_4 >= 0) {
-      a_2 = 1;
+    def v2 = i20;
+    if (i21 >= 0) {
+      v2 = 1;
+    } else if (i22 >= 0) {
+      v2 = 1;
+    } else if (i23 >= 0) {
+      v2 = 1;
+    } else if (i24 >= 0) {
+      v2 = 1;
     }
-    if (a_2 >= 0) {
+    if (v2 >= 0) {
       allneg = false;
     }
 

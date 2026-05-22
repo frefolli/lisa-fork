@@ -101,12 +101,20 @@ public class AllValues extends SetLattice<AllValues, SymbolicValue>
 
 	public AllValues evaluate(ProgramPoint programPoint, Primitive expr) throws SemanticException {
     Set<String> variables = VariableEnumerator.process(expr);
-    // Map<String, Set<Definition>> definitions = DefinitionPartitioner.process(variables, DataflowStateMap.getReachingDefinitionsMap().get(programPoint).elements);
-    // Logger.logDebug("expr = " + expr + "; variables = " + variables + "; definitions = " + definitions);
-    // CartesianDefinitionCombinator.process(definitions);
+    Set<Definition> reachingDefinitions = ReachingDefinitionsFilter.process(DataflowStateMap.getReachingDefinitionsMap().get(programPoint).elements);
+    Map<String, Set<Definition>> definitions = DefinitionPartitioner.process(variables, reachingDefinitions);
+    Logger.logDebug("expr = " + expr + "; variables = " + variables + "; definitions = " + definitions);
 
     Primitive PC_cdep = ControlDependencyPathConditionComputer.process(programPoint);
-    Logger.logDebug("PC_cdep of " + DataflowStateMap.labelize(programPoint) + " is " + PC_cdep);
+
+    CartesianDefinitionCombinator.process(definitions).forEach(combination -> {
+      Primitive PC_ddep = DataDependencyPathConditionComputer.process(combination);
+      Primitive PC_kdep = KillDependencyPathConditionComputer.process(combination);
+      Logger.logDebug(" - " + combination.toString());
+      Logger.logDebug("   PC_cdep of " + DataflowStateMap.labelize(programPoint) + " is " + PC_cdep);
+      Logger.logDebug("   PC_ddep of " + DataflowStateMap.labelize(programPoint) + " is " + PC_ddep);
+      Logger.logDebug("   PC_kdep of " + DataflowStateMap.labelize(programPoint) + " is " + PC_kdep);
+    });
 
     AllValues state = new AllValues(new SymbolicValue(expr, Calculator.makeTrue()));
     DataflowStateMap.getAllValuesMap().put(programPoint, state);
