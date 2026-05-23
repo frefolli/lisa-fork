@@ -1,0 +1,25 @@
+class ControlDependencies {
+  es4(i, ix, iy) {
+    def x = ix + 0;
+    def y = iy + 0;
+    if (x > 0) {
+      while (i > 0) {
+        i = i - 1;
+        y = y + x;
+        if (i == 0) {
+          y = -y;
+        }
+      }
+    } else {
+      if (i < 0) {
+        y = -1;
+      }
+      if (i > 5) {
+        y = y * 2;
+      } else {
+        y = y * x;
+      }
+    }
+    return y;
+  }
+}

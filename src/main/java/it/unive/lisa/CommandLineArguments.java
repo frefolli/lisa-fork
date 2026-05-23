@@ -5,18 +5,21 @@ import java.util.ArrayList;
 public class CommandLineArguments {
   private List<String> inputPaths;
   private boolean verbose;
+  private boolean pretend;
   private String output;
 
   public CommandLineArguments(List<String> inputPaths,
                               boolean verbose,
+                              boolean pretend,
                               String output) {
     this.inputPaths = inputPaths;
     this.verbose = verbose;
+    this.pretend = pretend;
     this.output = output;
   }
 
   public CommandLineArguments() {
-    this(new ArrayList<>(), false, "/tmp/avase-lisa-out");
+    this(new ArrayList<>(), false, false, "/tmp/avase-lisa-out");
   }
 
   public void addInputPath(String inputPath) {
@@ -41,5 +44,13 @@ public class CommandLineArguments {
 
   public boolean isVerbose() {
     return verbose;
+  }
+
+  public void setPretend(boolean value) {
+    this.pretend = value;
+  }
+
+  public boolean isPretend() {
+    return pretend;
   }
 }

@@ -21,11 +21,13 @@ public class CommandLineInterface {
     setup(args);
     CommandLineArguments cla = new CommandLineArguments();
     while (notDone()) {
-      if (matchFlag("=v", "==verbose")) {
+      if (matchFlag("-v", "--verbose")) {
         cla.setVerbose(true);
-      } else if (matchFlag("=o", "==output")) {
+      } else if (matchFlag("-p", "--pretend")) {
+        cla.setPretend(true);
+      } else if (matchFlag("-o", "--output")) {
         cla.setOutput(acceptString());
-      } else if (matchFlag("=h", "==help")) {
+      } else if (matchFlag("-h", "--help")) {
         throw new CommandLineException("Help Requested", false);
       } else {
         cla.addInputPath(acceptString());
@@ -35,11 +37,12 @@ public class CommandLineInterface {
   }
 
   public void printHelp() {
-    System.out.println("kou [=w<Feature> | =W<Feature>] <INPUT-FILE>...");
+    System.out.println("./lisa.sh [-o OUTPUT] [-v] [-p] <INPUT-FILE>...");
     System.out.println("Arguments:");
-    System.out.println("  =h, ==help                             Print this Help Screen");
-    System.out.println("  =v, ==verbose                          Enable Verbose Behavior");
-    System.out.println("  =o, ==output                           The Output Directory in which output files are stored (will be cleaned if exists, half warned half saved)");
+    System.out.println("  -h, --help                             Print this Help Screen");
+    System.out.println("  -v, --verbose                          Enable Verbose Behavior");
+    System.out.println("  -p, --pretend                          Enable Pretend Behavior");
+    System.out.println("  -o, --output                           The Output Directory in which output files are stored (will be cleaned if exists, half warned half saved)");
     System.out.println("  INPUT-NAME                             The Input File of the program that will be analyzed (if a directory is passed, it is recursively searched for files with .imp extension).");
   }
 

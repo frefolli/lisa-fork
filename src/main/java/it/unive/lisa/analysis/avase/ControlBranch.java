@@ -25,9 +25,6 @@ public class ControlBranch extends ProgramVisitor {
   public void initializeStates(CFG cfg) {
     Set<ProgramPoint> nodes = DataflowStateMap.getCFGMap().get(cfg);
     Map<ProgramPoint, Branch> function = DataflowStateMap.getControlBranchMap();
-    for (ProgramPoint pp : nodes) {
-      function.put(pp, new Branch());
-    }
   }
 
   public void visitCFG(CFG cfg) {
@@ -37,7 +34,9 @@ public class ControlBranch extends ProgramVisitor {
     Set<ProgramPoint> nodes = DataflowStateMap.getCFGMap().get(cfg);
     for (ProgramPoint pp : nodes) {
       Branch state = compute(cfg, pp);
-      function.put(pp, state);
+      if (state != null) {
+        function.put(pp, state);
+      }
     }
   }
 
@@ -55,7 +54,7 @@ public class ControlBranch extends ProgramVisitor {
         }
       }
     }
-    return new Branch();
+    return null;
   }
 
   private Branch computeIfElse(ControlFlowStructure cfs, ProgramPoint condition, ProgramPoint sink) {
@@ -65,7 +64,7 @@ public class ControlBranch extends ProgramVisitor {
     } else if (stmt.getFalseBranch().contains((Statement)sink)) {
       return new Branch(condition, Boolean.valueOf(false));
     } else {
-      return new Branch();
+      return null;
     }
   }
 

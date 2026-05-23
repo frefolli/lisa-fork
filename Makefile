@@ -1,5 +1,8 @@
 @all:
-	./gradlew build
+	./gradlew jar
+
+clean:
+	./gradlew clean
 
 example1:
 	clear && ./gradlew run --args="inputs/example1.imp =v"

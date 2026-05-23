@@ -1,0 +1,15 @@
+class ControlDependencies {
+  es1(i) {
+    def x = 0;
+    while (i > 0) {
+      x = x + 1;
+      i = i - 1;
+    }
+    def y = x + 1;
+    while (i < y) {
+      y = y + x;
+      i = i + 1;
+    }
+    def z = x * y;
+  }
+}

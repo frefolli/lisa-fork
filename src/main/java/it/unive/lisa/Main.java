@@ -70,7 +70,7 @@ public class Main {
     }
   }
 
-  private static void cleanOutputDirectoryIfDirty(String filePath) throws IOException, IllegalArgumentException {
+  private static void cleanCreateOutputDirectory(String filePath) throws IOException, IllegalArgumentException {
     File dir = new File(filePath);
     if (dir.exists()) {
       if (!dir.isDirectory()) {
@@ -78,6 +78,7 @@ public class Main {
       }
       FileUtils.deleteDirectory(dir);
     }
+    dir.mkdirs();
   }
 
   private static String mangleFilePath(Path currentPath, File file) throws IOException {
@@ -99,12 +100,12 @@ public class Main {
         Logger.logWarn("avase-lisa requires IMP files as input");
         return;
       }
-        
+
       Path currentPath = Paths.get(".").toAbsolutePath().normalize();
-      cleanOutputDirectoryIfDirty(cliArgs.getOutput());
+      cleanCreateOutputDirectory(cliArgs.getOutput());
       for (File inputFile :inputFiles) {
         String outputPath = cliArgs.getOutput() + "/" + mangleFilePath(currentPath, inputFile);
-        cleanOutputDirectoryIfDirty(outputPath);
+        cleanCreateOutputDirectory(outputPath);
         DataflowStateMap.clear();
 
         // we parse the program to get the CFG representation of the code in it
@@ -115,94 +116,94 @@ public class Main {
         Logger.logInfo("> ProgramInspector.computeAll(program) :: START");
         ProgramInspector.computeAll(program);
         Logger.logInfo("> ProgramInspector.computeAll(program) :: END");
+        
+        if (!cliArgs.isPretend()) {
+          Logger.logInfo("> PreDominators.computeAll(program) :: START");
+          PreDominators.computeAll(program);
+          Logger.logInfo("> PreDominators.computeAll(program) :: END");
 
-        Logger.logInfo("> PreDominators.computeAll(program) :: START");
-        PreDominators.computeAll(program);
-        Logger.logInfo("> PreDominators.computeAll(program) :: END");
+          Logger.logInfo("> PostDominators.computeAll(program) :: START");
+          PostDominators.computeAll(program);
+          Logger.logInfo("> PostDominators.computeAll(program) :: END");
 
-        /*
-        Logger.logInfo("> PostDominators.computeAll(program) :: START");
-        PostDominators.computeAll(program);
-        Logger.logInfo("> PostDominators.computeAll(program) :: END");
+          Logger.logInfo("> ImmediatePreDominators.computeAll(program) :: START");
+          ImmediatePreDominators.computeAll(program);
+          Logger.logInfo("> ImmediatePreDominators.computeAll(program) :: END");
 
-        Logger.logInfo("> ImmediatePreDominators.computeAll(program) :: START");
-        ImmediatePreDominators.computeAll(program);
-        Logger.logInfo("> ImmediatePreDominators.computeAll(program) :: END");
+          Logger.logInfo("> ImmediatePostDominators.computeAll(program) :: START");
+          ImmediatePostDominators.computeAll(program);
+          Logger.logInfo("> ImmediatePostDominators.computeAll(program) :: END");
 
-        Logger.logInfo("> ImmediatePostDominators.computeAll(program) :: START");
-        ImmediatePostDominators.computeAll(program);
-        Logger.logInfo("> ImmediatePostDominators.computeAll(program) :: END");
+          Logger.logInfo("> PreDomination.computeAll(program) :: START");
+          PreDomination.computeAll(program);
+          Logger.logInfo("> PreDomination.computeAll(program) :: END");
 
-        Logger.logInfo("> PreDomination.computeAll(program) :: START");
-        PreDomination.computeAll(program);
-        Logger.logInfo("> PreDomination.computeAll(program) :: END");
+          Logger.logInfo("> PostDomination.computeAll(program) :: START");
+          PostDomination.computeAll(program);
+          Logger.logInfo("> PostDomination.computeAll(program) :: END");
 
-        Logger.logInfo("> PostDomination.computeAll(program) :: START");
-        PostDomination.computeAll(program);
-        Logger.logInfo("> PostDomination.computeAll(program) :: END");
+          Logger.logInfo("> ImmediatePreDomination.computeAll(program) :: START");
+          ImmediatePreDomination.computeAll(program);
+          Logger.logInfo("> ImmediatePreDomination.computeAll(program) :: END");
 
-        Logger.logInfo("> ImmediatePreDomination.computeAll(program) :: START");
-        ImmediatePreDomination.computeAll(program);
-        Logger.logInfo("> ImmediatePreDomination.computeAll(program) :: END");
+          Logger.logInfo("> ImmediatePostDomination.computeAll(program) :: START");
+          ImmediatePostDomination.computeAll(program);
+          Logger.logInfo("> ImmediatePostDomination.computeAll(program) :: END");
 
-        Logger.logInfo("> ImmediatePostDomination.computeAll(program) :: START");
-        ImmediatePostDomination.computeAll(program);
-        Logger.logInfo("> ImmediatePostDomination.computeAll(program) :: END");
+          Logger.logInfo("> PreDominanceFrontier.computeAll(program) :: START");
+          PreDominanceFrontier.computeAll(program);
+          Logger.logInfo("> PreDominanceFrontier.computeAll(program) :: END");
 
-        Logger.logInfo("> PreDominanceFrontier.computeAll(program) :: START");
-        PreDominanceFrontier.computeAll(program);
-        Logger.logInfo("> PreDominanceFrontier.computeAll(program) :: END");
+          Logger.logInfo("> PostDominanceFrontier.computeAll(program) :: START");
+          PostDominanceFrontier.computeAll(program);
+          Logger.logInfo("> PostDominanceFrontier.computeAll(program) :: END");
 
-        Logger.logInfo("> PostDominanceFrontier.computeAll(program) :: START");
-        PostDominanceFrontier.computeAll(program);
-        Logger.logInfo("> PostDominanceFrontier.computeAll(program) :: END");
+          Logger.logInfo("> ControlBranch.computeAll(program) :: START");
+          ControlBranch.computeAll(program);
+          Logger.logInfo("> ControlBranch.computeAll(program) :: END");
 
-        Logger.logInfo("> ControlBranch.computeAll(program) :: START");
-        ControlBranch.computeAll(program);
-        Logger.logInfo("> ControlBranch.computeAll(program) :: END");
+          Logger.logInfo("> ControlDependencies.computeAll(program) :: START");
+          ControlDependencies.computeAll(program);
+          Logger.logInfo("> ControlDependencies.computeAll(program) :: END");
 
-        Logger.logInfo("> ControlDependencies.computeAll(program) :: START");
-        ControlDependencies.computeAll(program);
-        Logger.logInfo("> ControlDependencies.computeAll(program) :: END");
+          // we build a new configuration for the analysis
+          LiSAConfiguration conf = new DefaultConfiguration();
+          // we specify where we want files to be generated
+          conf.workdir = outputPath;
+          // we specify the visual format of the analysis results
+          conf.analysisGraphs = GraphType.HTML;
 
-        // we build a new configuration for the analysis
-        LiSAConfiguration conf = new DefaultConfiguration();
-        // we specify where we want files to be generated
-        conf.workdir = outputPath;
-        // we specify the visual format of the analysis results
-        conf.analysisGraphs = GraphType.HTML;
+          Map<String, Speculator> speculators = new HashMap<>();
+          List<String> speculatorsOrder = new ArrayList<>();
 
-        Map<String, Speculator> speculators = new HashMap<>();
-        List<String> speculatorsOrder = new ArrayList<>();
+          speculators.put("RD", new ReachingDefinitions());
+          speculatorsOrder.add("RD");
+          speculators.put("KD", new KilledDefinitions());
+          speculatorsOrder.add("KD");
+          speculators.put("AD", new AvailableDefinitions());
+          speculatorsOrder.add("AD");
+          speculators.put("ED", new EmergingDefinitions());
+          speculatorsOrder.add("ED");
+          speculators.put("AV", new AllValues());
+          speculatorsOrder.add("AV");
 
-        speculators.put("RD", new ReachingDefinitions());
-        speculatorsOrder.add("RD");
-        speculators.put("KD", new KilledDefinitions());
-        speculatorsOrder.add("KD");
-        speculators.put("AD", new AvailableDefinitions());
-        speculatorsOrder.add("AD");
-        speculators.put("ED", new EmergingDefinitions());
-        speculatorsOrder.add("ED");
-        speculators.put("AV", new AllValues());
-        speculatorsOrder.add("AV");
+          // we specify the analysis that we want to execute
+          conf.abstractState = AdvancedAbstractState.make(
+            new MonolithicHeap(),
+            new ValueEnvironment<>(new Interval()),
+            new TypeEnvironment<>(new InferredTypes()),
+            speculators,
+            speculatorsOrder
+          );
 
-        // we specify the analysis that we want to execute
-        conf.abstractState = AdvancedAbstractState.make(
-          new MonolithicHeap(),
-          new ValueEnvironment<>(new Interval()),
-          new TypeEnvironment<>(new InferredTypes()),
-          speculators,
-          speculatorsOrder
-        );
+          // we instantiate LiSA with our configuration
+          LiSA lisa = new LiSA(conf);
 
-        // we instantiate LiSA with our configuration
-        LiSA lisa = new LiSA(conf);
-
-        // finally, we tell LiSA to analyze the program
-        lisa.run(program);
+          // finally, we tell LiSA to analyze the program
+          lisa.run(program);
+        }
 
         Documenter.dump(outputPath, inputFile);
-        */
       }
     } catch (CommandLineException e) {
       cli.printHelp();

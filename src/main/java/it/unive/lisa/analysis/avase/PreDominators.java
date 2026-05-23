@@ -29,7 +29,9 @@ public class PreDominators extends ProgramVisitor {
     for (ProgramPoint pp : nodes) {
       boolean is_entrypoint = cfg.getEntrypoints().contains(pp);
       Set<ProgramPoint> state = new HashSet<ProgramPoint>();
-      if (!is_entrypoint) {
+      if (is_entrypoint) {
+        state.add(pp);
+      } else {
         for (ProgramPoint p : cfg.getNodes()) {
           state.add(p);
         }

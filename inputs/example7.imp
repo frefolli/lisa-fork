@@ -1,0 +1,17 @@
+class ControlDependencies {
+  es3(i) {
+    def x = 0;
+    while (i > 0) {
+      x = x + 1;
+      i = i - 1;
+      if (x > 10) {
+        x = 0;
+      }
+    }
+    def y = x + 1;
+    if (i < y) {
+      y = 0;
+    }
+    def z = x * y;
+  }
+}

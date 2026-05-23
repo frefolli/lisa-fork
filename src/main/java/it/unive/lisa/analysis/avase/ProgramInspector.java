@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
 
+import it.unive.lisa.logging.Logger;
 import it.unive.lisa.program.Program;
 import it.unive.lisa.program.Unit;
 import it.unive.lisa.program.ClassUnit;
@@ -35,6 +36,7 @@ public class ProgramInspector extends ProgramVisitor {
         assert !labellingMap.containsKey(pp);
         Integer ID = Integer.valueOf(1 + labellingMap.size());
         labellingMap.put(pp, ID);
+        Logger.logDebug(cfg.getDescriptor().getName() + "::[" + pp + "] => (" + ID + ")");
         nodes.add(pp);
       } else {
         System.out.println("Excluded: " + pp);

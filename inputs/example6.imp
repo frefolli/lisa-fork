@@ -1,0 +1,18 @@
+class ControlDependencies {
+  es2(i) {
+    def x = 0;
+    if (i > 10) {
+      x = 1;
+      if (i < 15) {
+        x = 2;
+      }
+    } else {
+      if (i > 5) {
+        x = 3;
+      } else {
+        x = 4;
+      }
+    }
+    def y = x * (x - 1);
+  }
+}
